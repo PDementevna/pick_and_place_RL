@@ -337,7 +337,7 @@
   </link>
   <joint
     name="finger_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0.0306011444260539 0.0627920162695395 0"
       rpy="-1.570796325 0 0" />
@@ -454,7 +454,7 @@
   </link>
   <joint
     name="left_inner_knuckle_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0.0127000000001501 0.0693074999999639 0"
       rpy="-1.570796325 0 0" />
@@ -516,7 +516,7 @@
   </link>
   <joint
     name="left_inner_finger_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0.034585310861294 0 0.0454970193817975"
       rpy="0 0 0" />
@@ -581,7 +581,7 @@
   </link>
   <joint
     name="right_inner_knuckle_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="-0.0126999999998499 0.0693075000000361 0"
       rpy="-1.570796325 0 1.570896325" />
@@ -643,7 +643,7 @@
   </link>
   <joint
     name="right_inner_finger_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="0.0458573878541688 0 0.03410604754574060"
       rpy="0 -1.57 3.14" />
@@ -705,7 +705,7 @@
   </link>
   <joint
     name="right_outer_knuckle_joint"
-    type="revolute">
+    type="fixed">
     <origin
       xyz="-0.0306011444258893 0.0627920162695395 0"
       rpy="-1.570796325 3.14159265358979 0" />
