@@ -5,7 +5,7 @@ from stable_baselines.common import make_vec_env, env_checker
 from stable_baselines import PPO2
 import ur_env
 
-model = PPO2.load("ppo2_ur100")
+model = PPO2.load("ppo2_ur200")
 
 env = gym.make('ur_env:ur-v0')
 print(f'env : {env}')

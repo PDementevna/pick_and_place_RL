@@ -30,7 +30,7 @@ class URGymEnv(gym.Env):
                maxSteps=1000):
     print("URGymEnv __init__")
     self._isDiscrete = isDiscrete
-    self._timeStep = 0.1
+    self._timeStep = 0.00001
     self._urdfRoot = urdfRoot
     self._actionRepeat = actionRepeat
     self._isEnableSelfCollision = isEnableSelfCollision
@@ -93,9 +93,9 @@ class URGymEnv(gym.Env):
     # ypos = 0 + 0.2 * random.random()
     # ang = 3.14 * 0.5 + 3.1415925438 * random.random()
     # orn = p.getQuaternionFromEuler([0, 0, ang])
-    self.trayUid = p.loadURDF("tray/tray.urdf",
-                              self.trayPos,
-                              [0.000000, 0.000000, 1.000000, 0.000000])
+    # self.trayUid = p.loadURDF("tray/tray.urdf",
+    #                           self.trayPos,
+    #                           [0.000000, 0.000000, 1.000000, 0.000000])
     self._ur = ur.UR(timeStep=self._timeStep)
 
     self.cubeUid = p.loadURDF("cube_small.urdf", self.pos_orient_object[0], self.pos_orient_object[1])
@@ -235,7 +235,7 @@ class URGymEnv(gym.Env):
                                                             upAxisIndex=2)
     proj_matrix = self._p.computeProjectionMatrixFOV(fov=60,
                                                      aspect=float(RENDER_WIDTH) / RENDER_HEIGHT,
-                                                     nearVal=1,
+                                                     nearVal=0.1,
                                                      farVal=4)
     (_, _, px, _, _) = self._p.getCameraImage(width=RENDER_WIDTH,
                                               height=RENDER_HEIGHT,
@@ -261,38 +261,38 @@ class URGymEnv(gym.Env):
       self._observation = self.getExtendedObservation()
       return True
     maxDist = 0.005
-    closestPoints = p.getClosestPoints(self.trayUid, self._ur.urUid, maxDist)
+    # closestPoints = p.getClosestPoints(self.trayUid, self._ur.urUid, maxDist)
 
-    if (len(closestPoints)):  #(actualEndEffectorPos[2] <= -0.43):
-      self.terminated = 1
-
-      print("terminating, closing gripper, attempting grasp")
-      #start grasp and terminate
-      fingerAngle = 0.5
-      for i in range(100):
-        graspAction = [0, 0, 0.0001, 0, fingerAngle]
-        self._ur.applyAction(graspAction)
-        p.stepSimulation()
-        fingerAngle = fingerAngle - (0.3 / 100.)
-        if (fingerAngle < 0):
-          fingerAngle = 0
-
-      for i in range(1000):
-        graspAction = [0, 0, 0.001, 0, fingerAngle]
-        self._ur.applyAction(graspAction)
-        p.stepSimulation()
-        cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-        if (cubePos[2] > 0.90):
-          #print("BLOCKPOS!")
-          #print(cubePos[2])
-          break
-        state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
-        actualEndEffectorPos = state[0]
-        if (actualEndEffectorPos[2] > 1.0):
-          break
-
-      self._observation = self.getExtendedObservation()
-      return True
+    # if (len(closestPoints)):  #(actualEndEffectorPos[2] <= -0.43):
+    #   self.terminated = 1
+    #
+    #   print("terminating, closing gripper, attempting grasp")
+    #   #start grasp and terminate
+    #   fingerAngle = 0.5
+    #   for i in range(100):
+    #     graspAction = [0, 0, 0.0001, 0, fingerAngle]
+    #     self._ur.applyAction(graspAction)
+    #     p.stepSimulation()
+    #     fingerAngle = fingerAngle - (0.3 / 100.)
+    #     if (fingerAngle < 0):
+    #       fingerAngle = 0
+    #
+    #   for i in range(1000):
+    #     graspAction = [0, 0, 0.001, 0, fingerAngle]
+    #     self._ur.applyAction(graspAction)
+    #     p.stepSimulation()
+    #     cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
+    #     if (cubePos[2] > 0.90):
+    #       #print("BLOCKPOS!")
+    #       #print(cubePos[2])
+    #       break
+    #     state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
+    #     actualEndEffectorPos = state[0]
+    #     if (actualEndEffectorPos[2] > 1.0):
+    #       break
+    #
+    #   self._observation = self.getExtendedObservation()
+    #   return True
     return False
 
   def _reward(self):

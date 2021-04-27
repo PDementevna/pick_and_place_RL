@@ -111,7 +111,7 @@ class UR:
         self.constraintGripper = p.createConstraint(self.urUid, 6,
                                                     self.gripperUid, -1,
                                                     p.JOINT_FIXED,
-                                                    jointAxis=[0, 1, 0],
+                                                    jointAxis=[0, 0, 1],
                                                     parentFramePosition=[0.0, 0.12, 0.0],
                                                     childFramePosition=[0, 0, 0],
                                                     parentFrameOrientation=parentFrameOrientation,
