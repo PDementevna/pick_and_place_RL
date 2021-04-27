@@ -42,9 +42,9 @@ class UR:
         # ]
         self.reset()
 
-    def getGripperJoints(self, degreeOfClosing=50):
+    def getGripperJoints(self):
         maxLimit = 0.8
-        value = degreeOfClosing * maxLimit * 0.01
+        value = self.degreeOfClosing * maxLimit
         return [value, 0., value, -value, -value, value, -value, 0.]
 
     def reset(self):
@@ -131,13 +131,10 @@ class UR:
         # p.setJointMotorControlArray(self.urUid, range(8), p.POSITION_CONTROL, jointRobot)
 
 
-
-        self.trayPos = [0.640000, 0.075000, 0.63]
-        self.trayUid = p.loadURDF("tray/tray.urdf",
-                                  self.trayPos,
-                                  [0.000000, 0.000000, 1.000000, 0.000000])
         self.endEffectorPos = list(ee_state[0])
-        self.degreeOfClosing = 0
+        robotEndEffectorState = p.getJointState(self.urUid, self.urEndEffectorIndex)
+        self.endEffectorAngle = robotEndEffectorState[0]
+        self.degreeOfClosing = 0.
 
         self.motorNames = []
         self.motorIndices = []
@@ -177,6 +174,7 @@ class UR:
     def applyAction(self, motorCommands):
         # motor commands:
         # graspAction = [0, 0, 0.0001, 0, 100]
+        jointPoses = []
 
         # print ("self.numJoints")
         # print (self.numJoints)
@@ -186,7 +184,7 @@ class UR:
             dy = motorCommands[1]
             dz = motorCommands[2]
             da = motorCommands[3]
-            degreeOfClosing = motorCommands[4]
+            self.degreeOfClosing = motorCommands[4]
 
             state = p.getLinkState(self.urUid, self.urEndEffectorIndex)
             actualEndEffectorPos = state[0]
@@ -194,16 +192,16 @@ class UR:
             # print(actualEndEffectorPos[2])
 
             self.endEffectorPos[0] = self.endEffectorPos[0] + dx
-            if (self.endEffectorPos[0] > 1.4):
-                self.endEffectorPos[0] = 1.4
-            if (self.endEffectorPos[0] < -1.4):
-                self.endEffectorPos[0] = -1.4
+            if (self.endEffectorPos[0] > 1.2):
+                self.endEffectorPos[0] = 1.2
+            if (self.endEffectorPos[0] < -1.2):
+                self.endEffectorPos[0] = -1.2
 
             self.endEffectorPos[1] = self.endEffectorPos[1] + dy
-            if (self.endEffectorPos[1] < -1.4):
-                self.endEffectorPos[1] = -1.4
-            if (self.endEffectorPos[1] > 1.4):
-                self.endEffectorPos[1] = 1.4
+            if (self.endEffectorPos[1] < -1.2):
+                self.endEffectorPos[1] = -1.2
+            if (self.endEffectorPos[1] > 1.2):
+                self.endEffectorPos[1] = 1.2
 
             # print ("self.endEffectorPos[2]")
             # print (self.endEffectorPos[2])
@@ -212,42 +210,46 @@ class UR:
             # if (dz<0 or actualEndEffectorPos[2]<0.5):
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
 
-            if (self.endEffectorPos[2] < 0.65):
-                self.endEffectorPos[2] = 0.65
-            if (self.endEffectorPos[2] > 1.4):
-                self.endEffectorPos[2] = 1.4
+            if (self.endEffectorPos[2] < 0.60):
+                self.endEffectorPos[2] = 0.60
+            if (self.endEffectorPos[2] > 1.2):
+                self.endEffectorPos[2] = 1.2
 
-            self.degreeOfClosing = self.degreeOfClosing + da
+            # self.degreeOfClosing = self.degreeOfClosing + da
+            self.endEffectorAngle = self.endEffectorAngle + da
             pos = self.endEffectorPos
             orn = p.getQuaternionFromEuler([0, -math.pi, 0])  # -math.pi,yaw])
             if (self.useNullSpace == 1):
                 if (self.useOrientation == 1):
-                    jointPoses = p.calculateInverseKinematics(self.urUid, self.urEndEffectorIndex, pos,
-                                                              orn)
+                    jointPoses = p.calculateInverseKinematics(self.urUid, self.urEndEffectorIndex, pos, orn)
                     jointPoses = list(jointPoses)
                     jointPoses.insert(0, 0.0)
                     jointPoses.append(0.0)
+                    jointPoses[self.urEndEffectorIndex] = self.endEffectorAngle
                 else:
                     jointPoses = p.calculateInverseKinematics(self.urUid,
                                                               self.urEndEffectorIndex,
                                                               pos)
+
                     jointPoses = list(jointPoses)
                     jointPoses.insert(0, 0.0)
                     jointPoses.append(0.0)
+                    jointPoses[self.urEndEffectorIndex] = self.endEffectorAngle
             else:
                 if (self.useOrientation == 1):
                     jointPoses = p.calculateInverseKinematics(self.urUid,
                                                               self.urEndEffectorIndex,
-                                                              pos,
-                                                              orn)
+                                                              pos, orn)
                     jointPoses = list(jointPoses)
                     jointPoses.insert(0, 0.0)
                     jointPoses.append(0.0)
+                    jointPoses[self.urEndEffectorIndex] = self.endEffectorAngle
                 else:
                     jointPoses = p.calculateInverseKinematics(self.urUid, self.urEndEffectorIndex, pos)
                     jointPoses = list(jointPoses)
                     jointPoses.insert(0, 0.0)
                     jointPoses.append(0.0)
+                    jointPoses[self.urEndEffectorIndex] = self.endEffectorAngle
 
             # print("jointPoses")
             # print(jointPoses)
@@ -273,35 +275,9 @@ class UR:
                 for i in range(self.urNumJoints):
                     p.resetJointState(self.urUid, i, jointPoses[i])
             # fingers
-            jointPosesGripper = self.getGripperJoints(degreeOfClosing)
+            jointPosesGripper = self.getGripperJoints()
             p.setJointMotorControlArray(self.gripperUid, range(8), p.POSITION_CONTROL,
                                         jointPosesGripper)
-            # p.setJointMotorControl2(self.urUid,
-            #                         7,
-            #                         p.POSITION_CONTROL,
-            #                         targetPosition=self.degreeOfClosing,
-            #                         force=self.maxForce)
-            # p.setJointMotorControl2(self.urUid,
-            #                         8,
-            #                         p.POSITION_CONTROL,
-            #                         targetPosition=-degreeOfClosing,
-            #                         force=self.fingerAForce)
-            # p.setJointMotorControl2(self.urUid,
-            #                         11,
-            #                         p.POSITION_CONTROL,
-            #                         targetPosition=degreeOfClosing,
-            #                         force=self.fingerBForce)
-            #
-            # p.setJointMotorControl2(self.urUid,
-            #                         10,
-            #                         p.POSITION_CONTROL,
-            #                         targetPosition=0,
-            #                         force=self.fingerTipForce)
-            # p.setJointMotorControl2(self.urUid,
-            #                         13,
-            #                         p.POSITION_CONTROL,
-            #                         targetPosition=0,
-            #                         force=self.fingerTipForce)
 
         else:
             for action in range(len(motorCommands)):

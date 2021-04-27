@@ -1,14 +1,17 @@
-# import os, inspect
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# print("current_dir=" + currentdir)
-# os.sys.path.insert(0, currentdir)
+import os, inspect
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+print("current_dir=" + currentdir)
+os.sys.path.insert(0, currentdir)
+
+import math
 import gym
 from gym import spaces
 from gym.utils import seeding
 import numpy as np
 import time
 import pybullet as p
-from ur_env.envs import ur
+import kuka
+import random
 import pybullet_data
 from pkg_resources import parse_version
 
@@ -18,7 +21,7 @@ RENDER_HEIGHT = 720
 RENDER_WIDTH = 960
 
 
-class URGymEnv(gym.Env):
+class KukaGymEnv(gym.Env):
   metadata = {'render.modes': ['human', 'rgb_array'], 'video.frames_per_second': 50}
 
   def __init__(self,
@@ -28,9 +31,9 @@ class URGymEnv(gym.Env):
                renders=True,
                isDiscrete=False,
                maxSteps=1000):
-    print("URGymEnv __init__")
+    #print("KukaGymEnv __init__")
     self._isDiscrete = isDiscrete
-    self._timeStep = 0.1
+    self._timeStep = 1. / 5.
     self._urdfRoot = urdfRoot
     self._actionRepeat = actionRepeat
     self._isEnableSelfCollision = isEnableSelfCollision
@@ -39,26 +42,20 @@ class URGymEnv(gym.Env):
     self._renders = renders
     self._maxSteps = maxSteps
     self.terminated = 0
-    self._cam_dist = 3
-    self._cam_yaw = 130
-    self._cam_pitch = -30
+    self._cam_dist = 1.3
+    self._cam_yaw = 180
+    self._cam_pitch = -40
 
     self._p = p
     if self._renders:
       cid = p.connect(p.SHARED_MEMORY)
       if (cid < 0):
         cid = p.connect(p.GUI)
-      p.resetDebugVisualizerCamera(3, 130, -30, [0, 0, 1])
+      p.resetDebugVisualizerCamera(1.3, 180, -41, [0.52, -0.2, -0.33])
     else:
       p.connect(p.DIRECT)
     #timinglog = p.startStateLogging(p.STATE_LOGGING_PROFILE_TIMINGS, "kukaTimings.json")
     self.seed()
-    outerLim = [-1.0, 2.0]
-    internalLim = [-0.15, 0.30]
-    self.trayPos = [0.640000, 0.075000, 0.63]
-
-    self.pos_orient_object = self.getRandomPosOrient(outerLim, internalLim, 0.65)
-
     self.reset()
     observationDim = len(self.getExtendedObservation())
     #print("observationDim")
@@ -76,58 +73,29 @@ class URGymEnv(gym.Env):
     self.viewer = None
 
   def reset(self):
-    p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
-    print("URGymEnv __reset__")
+    #print("KukaGymEnv _reset")
     self.terminated = 0
     p.resetSimulation()
     p.setPhysicsEngineParameter(numSolverIterations=150)
     p.setTimeStep(self._timeStep)
-    p.loadSDF('stadium.sdf')
+    p.loadURDF(os.path.join(self._urdfRoot, "plane.urdf"), [0, 0, -1])
 
-    self.tableUid = p.loadURDF("models/table_custom/table.urdf", [0., 0., 0.])
-    p.changeVisualShape(self.tableUid, 1, rgbaColor=[0.466, 0.341, 0.172, 1.0])
+    p.loadURDF(os.path.join(self._urdfRoot, "table/table.urdf"), 0.5000000, 0.00000, -.820000,
+               0.000000, 0.000000, 0.0, 1.0)
 
+    xpos = 0.55 + 0.12 * random.random()
+    ypos = 0 + 0.2 * random.random()
+    ang = 3.14 * 0.5 + 3.1415925438 * random.random()
+    orn = p.getQuaternionFromEuler([0, 0, ang])
+    self.blockUid = p.loadURDF(os.path.join(self._urdfRoot, "block.urdf"), xpos, ypos, -0.15,
+                               orn[0], orn[1], orn[2], orn[3])
 
-
-    # xpos = 0.55 + 0.12 * random.random()
-    # ypos = 0 + 0.2 * random.random()
-    # ang = 3.14 * 0.5 + 3.1415925438 * random.random()
-    # orn = p.getQuaternionFromEuler([0, 0, ang])
-    self.trayUid = p.loadURDF("tray/tray.urdf",
-                              self.trayPos,
-                              [0.000000, 0.000000, 1.000000, 0.000000])
-    self._ur = ur.UR(timeStep=self._timeStep)
-
-    self.cubeUid = p.loadURDF("cube_small.urdf", self.pos_orient_object[0], self.pos_orient_object[1])
-
-    # self.squareUid = p.loadURDF(os.path.join(self._urdfRoot, "block.urdf"), xpos, ypos, -0.15,
-    #                             orn[0], orn[1], orn[2], orn[3])
-
-    # p.setGravity(0, 0, -10)
+    p.setGravity(0, 0, -10)
+    self._kuka = kuka.Kuka(urdfRootPath=self._urdfRoot, timeStep=self._timeStep)
     self._envStepCounter = 0
     p.stepSimulation()
     self._observation = self.getExtendedObservation()
     return np.array(self._observation)
-
-  def getRandomPosOrient(self, outerLimitation, innerLimitation, z_coord=0.70):
-    x_pos = np.random.rand() * outerLimitation[1] + outerLimitation[0]
-    y_pos = np.random.rand() * outerLimitation[1] + outerLimitation[0]
-
-    trayBoundary = 0.25
-
-    if ((self.trayPos[0] + trayBoundary > x_pos > self.trayPos[0] - trayBoundary) and
-            (self.trayPos[1] + trayBoundary > y_pos > self.trayPos[1] + trayBoundary)):
-      self.getRandomPosOrient(outerLimitation, innerLimitation)
-
-    if innerLimitation[1] > x_pos > innerLimitation[0]:
-      self.getRandomPosOrient(outerLimitation, innerLimitation)
-    if innerLimitation[1] > y_pos > innerLimitation[0]:
-      self.getRandomPosOrient(outerLimitation, innerLimitation)
-
-
-    orient = np.random.rand() * 3.14
-    angles = p.getQuaternionFromEuler([0., 0., orient])
-    return [[x_pos, y_pos, z_coord], angles]
 
   def __del__(self):
     p.disconnect()
@@ -137,11 +105,11 @@ class URGymEnv(gym.Env):
     return [seed]
 
   def getExtendedObservation(self):
-    self._observation = self._ur.getObservation()
-    gripperState = p.getLinkState(self._ur.gripperUid, 0)
+    self._observation = self._kuka.getObservation()
+    gripperState = p.getLinkState(self._kuka.kukaUid, self._kuka.kukaGripperIndex)
     gripperPos = gripperState[0]
     gripperOrn = gripperState[1]
-    cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
+    blockPos, blockOrn = p.getBasePositionAndOrientation(self.blockUid)
 
     invGripperPos, invGripperOrn = p.invertTransform(gripperPos, gripperOrn)
     gripperMat = p.getMatrixFromQuaternion(gripperOrn)
@@ -152,48 +120,46 @@ class URGymEnv(gym.Env):
     gripperEul = p.getEulerFromQuaternion(gripperOrn)
     #print("gripperEul")
     #print(gripperEul)
-    cubePosInGripper, cubeOrnInGripper = p.multiplyTransforms(invGripperPos, invGripperOrn,
-                                                                cubePos, cubeOrn)
-    projectedBlockPos2D = [cubePosInGripper[0], cubePosInGripper[1]]
-    cubeEulerInGripper = p.getEulerFromQuaternion(cubeOrnInGripper)
+    blockPosInGripper, blockOrnInGripper = p.multiplyTransforms(invGripperPos, invGripperOrn,
+                                                                blockPos, blockOrn)
+    projectedBlockPos2D = [blockPosInGripper[0], blockPosInGripper[1]]
+    blockEulerInGripper = p.getEulerFromQuaternion(blockOrnInGripper)
     #print("projectedBlockPos2D")
     #print(projectedBlockPos2D)
-    #print("cubeEulerInGripper")
-    #print(cubeEulerInGripper)
+    #print("blockEulerInGripper")
+    #print(blockEulerInGripper)
 
     #we return the relative x,y position and euler angle of block in gripper space
-    cubeInGripperPosXYEulZ = [cubePosInGripper[0], cubePosInGripper[1], cubeEulerInGripper[2]]
+    blockInGripperPosXYEulZ = [blockPosInGripper[0], blockPosInGripper[1], blockEulerInGripper[2]]
 
     #p.addUserDebugLine(gripperPos,[gripperPos[0]+dir0[0],gripperPos[1]+dir0[1],gripperPos[2]+dir0[2]],[1,0,0],lifeTime=1)
     #p.addUserDebugLine(gripperPos,[gripperPos[0]+dir1[0],gripperPos[1]+dir1[1],gripperPos[2]+dir1[2]],[0,1,0],lifeTime=1)
     #p.addUserDebugLine(gripperPos,[gripperPos[0]+dir2[0],gripperPos[1]+dir2[1],gripperPos[2]+dir2[2]],[0,0,1],lifeTime=1)
 
-    self._observation.extend(list(cubeInGripperPosXYEulZ))
+    self._observation.extend(list(blockInGripperPosXYEulZ))
     return self._observation
 
   def step(self, action):
-    print(f'action is: {action}')
     if (self._isDiscrete):
       dv = 0.005
       dx = [0, -dv, dv, 0, 0, 0, 0][action]
       dy = [0, 0, 0, -dv, dv, 0, 0][action]
       da = [0, 0, 0, 0, 0, -0.05, 0.05][action]
-      f = 0.5
+      f = 0.3
       realAction = [dx, dy, -0.002, da, f]
-      print(f'realAction: ({realAction[0], realAction[1], realAction[2], realAction[3]}')
     else:
       #print("action[0]=", str(action[0]))
       dv = 0.005
       dx = action[0] * dv
       dy = action[1] * dv
       da = action[2] * 0.05
-      f = 0.5
+      f = 0.3
       realAction = [dx, dy, -0.002, da, f]
     return self.step2(realAction)
 
   def step2(self, action):
     for i in range(self._actionRepeat):
-      self._ur.applyAction(action)
+      self._kuka.applyAction(action)
       p.stepSimulation()
       if self._termination():
         break
@@ -223,10 +189,8 @@ class URGymEnv(gym.Env):
   def render(self, mode="rgb_array", close=False):
     if mode != "rgb_array":
       return np.array([])
-    # self.reset()
-    cube_pos, orn_cube = self._p.getBasePositionAndOrientation(self.cubeUid)
-    print(f'cube pos: {cube_pos}; cube orn: {orn_cube}')
-    base_pos, orn = self._p.getBasePositionAndOrientation(self._ur.urUid)
+
+    base_pos, orn = self._p.getBasePositionAndOrientation(self._kuka.kukaUid)
     view_matrix = self._p.computeViewMatrixFromYawPitchRoll(cameraTargetPosition=base_pos,
                                                             distance=self._cam_dist,
                                                             yaw=self._cam_yaw,
@@ -235,8 +199,8 @@ class URGymEnv(gym.Env):
                                                             upAxisIndex=2)
     proj_matrix = self._p.computeProjectionMatrixFOV(fov=60,
                                                      aspect=float(RENDER_WIDTH) / RENDER_HEIGHT,
-                                                     nearVal=1,
-                                                     farVal=4)
+                                                     nearVal=0.1,
+                                                     farVal=100.0)
     (_, _, px, _, _) = self._p.getCameraImage(width=RENDER_WIDTH,
                                               height=RENDER_HEIGHT,
                                               viewMatrix=view_matrix,
@@ -252,7 +216,7 @@ class URGymEnv(gym.Env):
 
   def _termination(self):
     #print (self._kuka.endEffectorPos[2])
-    state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
+    state = p.getLinkState(self._kuka.kukaUid, self._kuka.kukaEndEffectorIndex)
     actualEndEffectorPos = state[0]
 
     #print("self._envStepCounter")
@@ -261,17 +225,17 @@ class URGymEnv(gym.Env):
       self._observation = self.getExtendedObservation()
       return True
     maxDist = 0.005
-    closestPoints = p.getClosestPoints(self.trayUid, self._ur.urUid, maxDist)
+    closestPoints = p.getClosestPoints(self._kuka.trayUid, self._kuka.kukaUid, maxDist)
 
     if (len(closestPoints)):  #(actualEndEffectorPos[2] <= -0.43):
       self.terminated = 1
 
-      print("terminating, closing gripper, attempting grasp")
+      #print("terminating, closing gripper, attempting grasp")
       #start grasp and terminate
-      fingerAngle = 0.5
+      fingerAngle = 0.3
       for i in range(100):
         graspAction = [0, 0, 0.0001, 0, fingerAngle]
-        self._ur.applyAction(graspAction)
+        self._kuka.applyAction(graspAction)
         p.stepSimulation()
         fingerAngle = fingerAngle - (0.3 / 100.)
         if (fingerAngle < 0):
@@ -279,16 +243,16 @@ class URGymEnv(gym.Env):
 
       for i in range(1000):
         graspAction = [0, 0, 0.001, 0, fingerAngle]
-        self._ur.applyAction(graspAction)
+        self._kuka.applyAction(graspAction)
         p.stepSimulation()
-        cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-        if (cubePos[2] > 0.90):
+        blockPos, blockOrn = p.getBasePositionAndOrientation(self.blockUid)
+        if (blockPos[2] > 0.23):
           #print("BLOCKPOS!")
-          #print(cubePos[2])
+          #print(blockPos[2])
           break
-        state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
+        state = p.getLinkState(self._kuka.kukaUid, self._kuka.kukaEndEffectorIndex)
         actualEndEffectorPos = state[0]
-        if (actualEndEffectorPos[2] > 1.0):
+        if (actualEndEffectorPos[2] > 0.5):
           break
 
       self._observation = self.getExtendedObservation()
@@ -298,9 +262,9 @@ class URGymEnv(gym.Env):
   def _reward(self):
 
     #rewards is height of target object
-    cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-    closestPoints = p.getClosestPoints(self.cubeUid, self._ur.urUid, 1000, -1,
-                                       self._ur.urEndEffectorIndex)
+    blockPos, blockOrn = p.getBasePositionAndOrientation(self.blockUid)
+    closestPoints = p.getClosestPoints(self.blockUid, self._kuka.kukaUid, 1000, -1,
+                                       self._kuka.kukaEndEffectorIndex)
 
     reward = -1000
 
@@ -309,7 +273,7 @@ class URGymEnv(gym.Env):
     if (numPt > 0):
       #print("reward:")
       reward = -closestPoints[0][8] * 10
-    if (cubePos[2] > 0.75):
+    if (blockPos[2] > 0.2):
       reward = reward + 10000
       print("successfully grasped a block!!!")
       #print("self._envStepCounter")
