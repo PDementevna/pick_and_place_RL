@@ -36,10 +36,9 @@ class UR:
         # #restposes for null space
         # self.rp = [0, 0, 0, 0.5 * math.pi, 0, -math.pi * 0.5 * 0.66, 0]
         # #joint damping coefficents
-        # self.jd = [
-        #     0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001, 0.00001,
-        #     0.00001, 0.00001, 0.00001, 0.00001
-        # ]
+        self.jd = [
+            0.000001, 0.1, 10, 10, 0.1, 0.00001
+        ]
         self.reset()
 
     def getGripperJoints(self):
@@ -71,7 +70,7 @@ class UR:
         #     -0.299912, 0.000000, -0.000043, 0.299960, 0.000000, -0.000200
         # ]
 
-        self.jointPositions = [3.14, -1.57, -1.57, 1.570793, 0.000000, 0.0, 0.0, 0.]
+        self.jointPositions = [3.14, -1.57, -1.57, 1.570793, 1.570793, 1.570793, 0.0, 0.]
         self.urNumJoints = p.getNumJoints(self.urUid)
         for jointIndex in range(self.urNumJoints):
             p.resetJointState(self.urUid, jointIndex, self.jointPositions[jointIndex])
@@ -239,7 +238,9 @@ class UR:
                 if (self.useOrientation == 1):
                     jointPoses = p.calculateInverseKinematics(self.urUid,
                                                               self.urEndEffectorIndex,
-                                                              pos, orn)
+                                                              pos, orn,
+                                                              jointDamping=self.jd
+                                                              )
                     jointPoses = list(jointPoses)
                     jointPoses.insert(0, 0.0)
                     jointPoses.append(0.0)
@@ -280,6 +281,7 @@ class UR:
                                         jointPosesGripper)
 
         else:
+            print('stange action, do not get')
             for action in range(len(motorCommands)):
                 motor = self.motorIndices[action]
                 p.setJointMotorControl2(self.urUid,
