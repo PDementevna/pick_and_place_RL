@@ -17,17 +17,5 @@ print(f'env observation space: {env.observation_space}')
 # env_checker.check_env(env, True, True)
 
 model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log='./ppo2_ur_tensorboard/')
-model.learn(total_timesteps=5000000, tb_log_name="first_5b")
-model.save("ppo2_ur5000")
-
-
-# del model # remove to demonstrate saving and loading
-#
-# model = PPO2.load("ppo2_ur")
-#
-# # Enjoy trained agent
-# obs = env.reset()
-# while True:
-#     action, _states = model.predict(obs)
-#     obs, rewards, dones, info = env.step(action)
-#     env.render()
+model.learn(total_timesteps=300000, tb_log_name="limited_sector")
+model.save("trained_models/ppo2_ur_limited_sector")

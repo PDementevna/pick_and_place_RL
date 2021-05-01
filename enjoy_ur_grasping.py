@@ -1,21 +1,20 @@
 import gym
-
-from stable_baselines.common.policies import MlpPolicy
-from stable_baselines.common import make_vec_env, env_checker
-from stable_baselines.common.vec_env import DummyVecEnv
 from stable_baselines import PPO2
+from gym.wrappers import Monitor
 import ur_env
-
-env = gym.make('ur_env:ur-v0')
+env = Monitor(gym.make('ur_env:ur-v0'), './video', force=True)
+# env = gym.make('ur_env:ur-v0')
 # env_vec = DummyVecEnv([lambda: env])
-model = PPO2.load("ppo2_ur5000")
+model = PPO2.load("trained_models/ppo2_ur_limited_sector")
 
 print(f'env : {env}')
 # env_checker.check_env(env, True, True)
 
 # Enjoy trained agent
 obs = env.reset()
-while True:
+done = False
+while not done:
+# for i in range(1000):
     action, _states = model.predict(obs)
-    obs, rewards, dones, info = env.step(action)
+    obs, rewards, done, info = env.step(action)
     env.render(mode='human')
