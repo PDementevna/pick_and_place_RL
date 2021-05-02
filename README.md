@@ -4,8 +4,7 @@ The training of the UR10 robot with appropriate gripper for
 picking a randomly appeared cube on the table and placing it 
 in a specific place. The framework for simulation the robot behaviour 
 is PyBullet. The algorithm for RL training is PPO2 from stable baselines.
-The video of the performance is here: 
-`https://drive.google.com/file/d/1MEtzKqKblDXoIMLvLFJbaJatPhawon0w/view?usp=sharing`
+The video of the performance is here: https://drive.google.com/file/d/1MEtzKqKblDXoIMLvLFJbaJatPhawon0w/view?usp=sharing
 
 ### Prerequisites
 
