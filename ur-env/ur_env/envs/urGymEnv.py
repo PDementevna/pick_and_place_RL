@@ -1,7 +1,3 @@
-# import os, inspect
-# currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-# print("current_dir=" + currentdir)
-# os.sys.path.insert(0, currentdir)
 import math
 
 import gym
@@ -53,21 +49,15 @@ class URGymEnv(gym.Env):
             p.resetDebugVisualizerCamera(3, 130, -30, [0, 0, 1])
         else:
             p.connect(p.DIRECT)
-        # timinglog = p.startStateLogging(p.STATE_LOGGING_PROFILE_TIMINGS, "urTimings.json")
         self.seed()
-        # self.outerLim = [-1.0, 1.1]
-        # self.internalLim = [-0.50, 0.51]
 
         self.cubeXLim = [0.5, 0.7]
         self.cubeYLim = [0.5, 0.7]
 
         self.trayPos = [0.640000, 0.075000, 0.63]
 
-        # print('here reset?')
         self.reset()
         observationDim = len(self.getExtendedObservation())
-        # print("observationDim")
-        # print(observationDim)
 
         observation_high = np.array([largeValObservation] * observationDim)
         if (self._isDiscrete):
@@ -80,32 +70,22 @@ class URGymEnv(gym.Env):
         self.observation_space = spaces.Box(-observation_high, observation_high)
         self.viewer = None
 
-    # def move_to_cube(self, pos):
-    #     # orn = self._p.getQuaternionFromEuler([0.57, 0., 0.])
-    #     jointPoses = p.calculateInverseKinematics(self._ur.urUid, self._ur.urEndEffectorIndex, pos)
-    #     jointPoses = list(jointPoses)
-    #     jointPoses.insert(0, 0.0)
-    #     jointPoses.append(0.0)
-    #     # jointPoses[self.urEndEffectorIndex] = self.endEffectorAngle
-    #
-    #     # for joint_index in range(self._p.getNumJoints(self._ur.gripperUid)):
-    #     #     self._p.resetJointState(self._ur.urUid, joint_index, jointPoses[joint_index])
-    #
-    #     self._p.setJointMotorControlArray(self._ur.urUid, range(8),
-    #                                       p.POSITION_CONTROL,
-    #                                       jointPoses)
-    #
-    #     ee_state = p.getLinkState(self._ur.urUid, 6)
-    #     gripper_left = p.getLinkState(self._ur.gripperUid, 4)
-    #     gripper_right = p.getLinkState(self._ur.gripperUid, 6)
-    #     print(f'pos received: {ee_state[0]}')
-    #     print(f'pos sent: {pos}')
-    #     print(f'gripper pos left: {gripper_left[0]}')
-    #     print(f'gripper pos right: {gripper_right[0]}')
+    def move_to_cube(self, pos):
+        jointPoses = p.calculateInverseKinematics(self._ur.urUid, self._ur.urEndEffectorIndex, pos)
+        jointPoses = list(jointPoses)
+        jointPoses.insert(0, 0.0)
+        jointPoses.append(0.0)
+        self._p.setJointMotorControlArray(self._ur.urUid, range(8),
+                                          p.POSITION_CONTROL,
+                                          jointPoses)
 
-    # def pickObject(self, pos):
-    #     self.move_to_cube(pos)
-    #     self._ur.closeGripper()
+        # ee_state = p.getLinkState(self._ur.urUid, 6)
+        # gripper_left = p.getLinkState(self._ur.gripperUid, 4)
+        # gripper_right = p.getLinkState(self._ur.gripperUid, 6)
+
+    def pickObject(self, pos):
+        self.move_to_cube(pos)
+        self._ur.closeGripper()
 
     def reset(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
@@ -121,10 +101,6 @@ class URGymEnv(gym.Env):
         self.tableUid = p.loadURDF("models/table_custom/table.urdf", [0., 0., 0.])
         self._p.changeVisualShape(self.tableUid, 1, rgbaColor=[0.466, 0.341, 0.172, 1.0])
 
-        # xpos = 0.55 + 0.12 * random.random()
-        # ypos = 0 + 0.2 * random.random()
-        # ang = 3.14 * 0.5 + 3.1415925438 * random.random()
-        # orn = p.getQuaternionFromEuler([0, 0, ang])
         # self.trayUid = p.loadURDF("tray/tray.urdf",
         #                           self.trayPos,
         #                           [0.000000, 0.000000, 1.000000, 0.000000])
@@ -132,10 +108,6 @@ class URGymEnv(gym.Env):
         self.ee_state = p.getLinkState(self._ur.urUid, 7)
         self.pos_orient_object = self.getRandomPosOrient(0.65)
 
-        # coords = self.pos_orient_object[0].copy()
-        # coords[2] = 1.0
-
-        # self.cubeUid = p.loadURDF("cube_small.urdf", self.pos_orient_object[0], self.pos_orient_object[1])
         self.cubeRandomPlace()
         # self.pickObject(pos)
         # for i in range(50):
@@ -145,35 +117,15 @@ class URGymEnv(gym.Env):
 
         self.catched = False
 
-        # self.squareUid = p.loadURDF(os.path.join(self._urdfRoot, "block.urdf"), xpos, ypos, -0.15,
-        #                             orn[0], orn[1], orn[2], orn[3])
-
-        # p.setGravity(0, 0, -10)
         self._envStepCounter = 0
         p.stepSimulation()
         self._observation = self.getExtendedObservation()
         return np.array(self._observation)
 
     def getRandomPosOrient(self, z_coord=0.70):
-        # x_pos = np.random.rand() * self.outerLim[1] + self.outerLim[0]
-        # y_pos = np.random.rand() * self.outerLim[1] + self.outerLim[0]
-
-        # x_pos = 0.3
-        # y_pos = 0.3
 
         x_pos = np.random.rand() * self.cubeXLim[1] + self.cubeXLim[0]
         y_pos = np.random.rand() * self.cubeYLim[1] + self.cubeYLim[0]
-
-        trayBoundary = 0.25
-
-        # if ((self.trayPos[0] + trayBoundary > x_pos > self.trayPos[0] - trayBoundary) and
-        #         (self.trayPos[1] + trayBoundary > y_pos > self.trayPos[1] + trayBoundary)):
-        #   self.getRandomPosOrient(outerLimitation, innerLimitation)
-
-        # if self.internalLim[1] > x_pos > self.internalLim[0]:
-        #   self.getRandomPosOrient(z_coord)
-        # if self.internalLim[1] > y_pos > self.internalLim[0]:
-        #   self.getRandomPosOrient(z_coord)
 
         orient = np.random.rand() * 3.14
         angles = p.getQuaternionFromEuler([0., 0., orient])
@@ -239,8 +191,6 @@ class URGymEnv(gym.Env):
                            (cubePos[1] - gripperEndEffPos[1]) ** 2 +
                            (cubePos[2] - gripperEndEffPos[2]) ** 2)
         # print(f'distance to cube: {distance}')
-        if (self._envStepCounter == 49999):
-            print(f'distance to cube: {distance}')
 
         if (distance < threshold):
             # print(f'distance is under threshold!')
@@ -255,28 +205,6 @@ class URGymEnv(gym.Env):
 
 
     def step(self, action):
-        # self.ee_state = p.getLinkState(self._ur.urUid, 7)
-        # # print(f'pos 6 link: {p.getLinkState(self._ur.urUid, 6)[0]}')
-        # print(f'pos 7 link: {p.getLinkState(self._ur.urUid, 7)[0]}')
-        # gripperState = p.getLinkState(self._ur.gripperUid, 0)
-        # gripperPos = gripperState[0]
-        # # cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-        # print(f'pos gripper base: {gripperPos}')
-        # gripperLeftFinger = p.getLinkState(self._ur.gripperUid, 3)
-        # gripperRightFinger = p.getLinkState(self._ur.gripperUid, 5)
-        # print(f'pos gripper left: {gripperLeftFinger[0]}')
-        # print(f'pos gripper right: {gripperRightFinger[0]}')
-        #
-        # print(f'orn ee: {self._p.getEulerFromQuaternion(self.ee_state[1])}')
-        # # posEE = self.ee_state[0]
-        # # action = [(self.pos_orient_object[0][0] - posEE[0]),
-        # #           (self.pos_orient_object[0][1] - posEE[1]),
-        # #           (self.pos_orient_object[0][2] - posEE[2]),
-        # #           (self.pos_orient_object[1][2] - self.ee_state[1][2])]
-        #
-        # # action =
-        #
-        # # print(f'action is: {action}')
         if (self._isDiscrete):
             dv = 0.005
             dx = [0, -dv, dv, 0, 0, 0, 0][action]
@@ -286,7 +214,6 @@ class URGymEnv(gym.Env):
             realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            # print("action[0]=", str(action[0]))
             dv = 0.005
             dx = action[0] * dv
             dy = action[1] * dv
@@ -316,15 +243,11 @@ class URGymEnv(gym.Env):
         done = self._termination()
 
         npaction = np.array([
-            # 0
             action[0],
             action[1],
             action[2]
         ])  # only penalize rotation until learning works well [action[0],action[1],action[3]])
-        # print((f'npartion: {npaction}'))
         actionCost = np.linalg.norm(npaction) * 10.
-        # print("actionCost")
-        # print(actionCost)
         reward = self._reward() - actionCost
         # print(f'reward: {reward}')
         # print("reward")
@@ -376,38 +299,7 @@ class URGymEnv(gym.Env):
             self._observation = self.getExtendedObservation()
             return True
         maxDist = 0.005
-        # closestPoints = p.getClosestPoints(self.tableUid, self._ur.urUid, maxDist)
 
-        # if (len(closestPoints)):  #(actualEndEffectorPos[2] <= -0.43):
-        #   self.terminated = 1
-        #
-        #   # print("terminating, closing gripper, attempting grasp")
-        #   # #start grasp and terminate
-        #   # fingerAngle = 0.5
-        #   # for i in range(100):
-        #   #   graspAction = [0, 0, 0.0001, 0, fingerAngle]
-        #   #   self._ur.applyAction(graspAction)
-        #   #   p.stepSimulation()
-        #   #   fingerAngle = fingerAngle - (0.3 / 100.)
-        #   #   if (fingerAngle < 0):
-        #   #     fingerAngle = 0
-        #   #
-        #   # for i in range(1000):
-        #   #   graspAction = [0, 0, 0.001, 0, fingerAngle]
-        #   #   self._ur.applyAction(graspAction)
-        #   #   p.stepSimulation()
-        #   #   cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-        #   #   if (cubePos[2] > 0.90):
-        #   #     #print("BLOCKPOS!")
-        #   #     #print(cubePos[2])
-        #   #     break
-        #   #   state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
-        #   #   actualEndEffectorPos = state[0]
-        #   #   if (actualEndEffectorPos[2] > 1.0):
-        #   #     break
-        #
-        #   self._observation = self.getExtendedObservation()
-        #   return True
         return False
 
     def _check_accident(self):
@@ -427,8 +319,6 @@ class URGymEnv(gym.Env):
         distance = math.sqrt(
             (cubePos[0] - link_state[0]) ** 2 + (cubePos[1] - link_state[1]) ** 2 + (cubePos[2] - link_state[2]) ** 2)
         # print(f'distance: {distance}')
-        # if (self._envStepCounter == 49999):
-        #     print(f'distance to cube: {distance}')
         return distance
 
     def _reward(self):
@@ -446,7 +336,6 @@ class URGymEnv(gym.Env):
         if (numPt > 0):
             # print("reward:")
             reward = -closestPoints[0][8] * 10
-            # if (closestPoints[0][8] < 0.1):
             if (distance < 0.2):
                 reward = reward + 5000
 
@@ -457,16 +346,6 @@ class URGymEnv(gym.Env):
                 # self.catched = True
                 reward = reward + 5000
                 print("successfully grasped a block!!!")
-                # print("self._envStepCounter")
-                # print(self._envStepCounter)
-                # print("self._envStepCounter")
-                # print(self._envStepCounter)
-                # print("reward")
-                # print(reward)
-            # print("reward")
-            # print(reward)
-            # else:
-            #     self.catched = False
         return reward
 
     if parse_version(gym.__version__) < parse_version('0.9.6'):
