@@ -10,10 +10,8 @@ import ur_env
 # env = make_vec_env('CartPole-v1', n_envs=4)
 
 env = gym.make('ur_env:ur-v0')
-# env_vec = DummyVecEnv([lambda: env])
+env_vec = DummyVecEnv([lambda: env])
 print(f'env : {env}')
-print(f'env action space: {env.action_space}')
-print(f'env observation space: {env.observation_space}')
 # env_checker.check_env(env, True, True)
 
 model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log='./ppo2_ur_tensorboard/')
