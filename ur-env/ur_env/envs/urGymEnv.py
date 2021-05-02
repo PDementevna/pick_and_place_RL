@@ -32,7 +32,7 @@ class URGymEnv(gym.Env):
                  maxSteps=50000):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
-        self._timeStep = 0.001
+        self._timeStep = 0.0001
         self._urdfRoot = urdfRoot
         self._actionRepeat = actionRepeat
         self._isEnableSelfCollision = isEnableSelfCollision
@@ -59,7 +59,7 @@ class URGymEnv(gym.Env):
         # self.internalLim = [-0.50, 0.51]
 
         self.cubeXLim = [0.5, 0.7]
-        self.cubeYLim = [-0.7, 0.7]
+        self.cubeYLim = [0.5, 0.7]
 
         self.trayPos = [0.640000, 0.075000, 0.63]
 
@@ -234,11 +234,13 @@ class URGymEnv(gym.Env):
         gripperEndEffPos = ((gripperRightFinger[0] + gripperLeftFinger[0]) / 2.,
                             (gripperRightFinger[1] + gripperLeftFinger[1]) / 2.,
                             (gripperRightFinger[2] + gripperLeftFinger[2]) / 2.)
-        print(f'mean pos gripper: {gripperEndEffPos}')
+        # print(f'mean pos gripper: {gripperEndEffPos}')
         distance = np.sqrt((cubePos[0] - gripperEndEffPos[0]) ** 2 +
                            (cubePos[1] - gripperEndEffPos[1]) ** 2 +
                            (cubePos[2] - gripperEndEffPos[2]) ** 2)
-        print(f'distance to cube: {distance}')
+        # print(f'distance to cube: {distance}')
+        if (self._envStepCounter == 49999):
+            print(f'distance to cube: {distance}')
 
         if (distance < threshold):
             # print(f'distance is under threshold!')
@@ -293,7 +295,7 @@ class URGymEnv(gym.Env):
             da = action[3] * 0.05
             f = self.gripperOpenning()
             realAction = [dx, dy, dz, da, f]
-            print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
+            # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         return self.step2(realAction)
 
     def step2(self, action):
@@ -303,28 +305,28 @@ class URGymEnv(gym.Env):
             if self._termination():
                 break
             self._envStepCounter += 1
-            print(f'env ecounter: {self._envStepCounter}')
+            # print(f'env ecounter: {self._envStepCounter}')
         if self._renders:
             time.sleep(self._timeStep)
         self._observation = self.getExtendedObservation()
 
         # print("self._envStepCounter")
         # print(self._envStepCounter)
-        # self._check_accident()
+        self._check_accident()
         done = self._termination()
 
         npaction = np.array([
             # 0
-            # action[0],
-            # action[1],
-            action[3]
+            action[0],
+            action[1],
+            action[2]
         ])  # only penalize rotation until learning works well [action[0],action[1],action[3]])
-        print((f'npartion: {npaction}'))
+        # print((f'npartion: {npaction}'))
         actionCost = np.linalg.norm(npaction) * 10.
         # print("actionCost")
         # print(actionCost)
         reward = self._reward() - actionCost
-        print(f'reward: {reward}')
+        # print(f'reward: {reward}')
         # print("reward")
         # print(reward)
 
@@ -370,7 +372,7 @@ class URGymEnv(gym.Env):
         # print("self._envStepCounter")
         # print(self._envStepCounter)
         if (self.terminated or self._envStepCounter > self._maxSteps):
-            print(f'envCounter, reset: {self._envStepCounter}')
+            # print(f'envCounter, reset: {self._envStepCounter}')
             self._observation = self.getExtendedObservation()
             return True
         maxDist = 0.005
@@ -425,6 +427,8 @@ class URGymEnv(gym.Env):
         distance = math.sqrt(
             (cubePos[0] - link_state[0]) ** 2 + (cubePos[1] - link_state[1]) ** 2 + (cubePos[2] - link_state[2]) ** 2)
         # print(f'distance: {distance}')
+        # if (self._envStepCounter == 49999):
+        #     print(f'distance to cube: {distance}')
         return distance
 
     def _reward(self):

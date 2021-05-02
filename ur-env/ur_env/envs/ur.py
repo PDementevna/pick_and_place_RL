@@ -89,13 +89,13 @@ class UR:
         #                             self.jointPositions)
 
         ee_state = p.getLinkState(self.urUid, 6)
-        print(f'ee pos: {ee_state[0]}\nee orn: {p.getEulerFromQuaternion(ee_state[1])}')
+        # print(f'ee pos: {ee_state[0]}\nee orn: {p.getEulerFromQuaternion(ee_state[1])}')
         jointRobotInitial = p.getJointStates(self.urUid, range(8))
-        print(f'joints before kinematics: ({jointRobotInitial[0][0]},'
-              f'{jointRobotInitial[1][0]}, {jointRobotInitial[2][0]},'
-              f'{jointRobotInitial[3][0]}, {jointRobotInitial[4][0]},'
-              f'{jointRobotInitial[5][0]}, {jointRobotInitial[6][0]},'
-              f'{jointRobotInitial[7][0]})')
+        # print(f'joints before kinematics: ({jointRobotInitial[0][0]},'
+        #       f'{jointRobotInitial[1][0]}, {jointRobotInitial[2][0]},'
+        #       f'{jointRobotInitial[3][0]}, {jointRobotInitial[4][0]},'
+        #       f'{jointRobotInitial[5][0]}, {jointRobotInitial[6][0]},'
+        #       f'{jointRobotInitial[7][0]})')
 
 
         # initial_position_gripper = [0.923103, -0.200000, 1.250036]
@@ -215,18 +215,18 @@ class UR:
 
             self.endEffectorPos[0] = self.endEffectorPos[0] + dx
             if (self.endEffectorPos[0] > 1.2):
-                print('boundary x+')
+                # print('boundary x+')
                 self.endEffectorPos[0] = 1.2
             if (self.endEffectorPos[0] < 0.1):
-                print('boundary x-')
+                # print('boundary x-')
                 self.endEffectorPos[0] = 0.1
 
             self.endEffectorPos[1] = self.endEffectorPos[1] + dy
             if (self.endEffectorPos[1] < -1.2):
-                print('boundary y-')
+                # print('boundary y-')
                 self.endEffectorPos[1] = -1.2
             if (self.endEffectorPos[1] > 1.2):
-                print('boundary y+')
+                # print('boundary y+')
                 self.endEffectorPos[1] = 1.2
 
             # print ("self.endEffectorPos[2]")
@@ -236,10 +236,10 @@ class UR:
             # if (dz<0 or actualEndEffectorPos[2]<0.5):
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
             if (self.endEffectorPos[2] < 0.80):
-                print('boundary z-')
+                # print('boundary z-')
                 self.endEffectorPos[2] = 0.80
             if (self.endEffectorPos[2] > 1.2):
-                print('boundary z+')
+                # print('boundary z+')
                 self.endEffectorPos[2] = 1.2
 
             # self.degreeOfClosing = self.degreeOfClosing + da
