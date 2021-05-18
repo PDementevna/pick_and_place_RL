@@ -28,7 +28,7 @@ class URGymEnv(gym.Env):
                  maxSteps=20000):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
-        self._timeStep = 0.0001
+        self._timeStep = 0.01
         self._urdfRoot = urdfRoot
         self._actionRepeat = actionRepeat
         self._isEnableSelfCollision = isEnableSelfCollision
@@ -223,7 +223,8 @@ class URGymEnv(gym.Env):
             # da = 0.05
             da = action[3] * 0.001
             # f = self.gripperOpenning()
-            gripperState = action[4] * 0.008
+            gripperState = 0.0
+            # gripperState = action[4] * 0.008
             realAction = [dx, dy, -0.00005, da, gripperState]
             # realAction = [dx, dy, dz, da, gripperState]
             # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
@@ -243,7 +244,7 @@ class URGymEnv(gym.Env):
 
         # print("self._envStepCounter")
         # print(self._envStepCounter)
-        self._check_accident()
+        # self._check_accident()
         done = self._termination()
         # done = False
 
@@ -304,9 +305,36 @@ class URGymEnv(gym.Env):
             self._observation = self.getExtendedObservation()
             # print('termination')
             return True
-        maxDist = 0.005
+        maxDist = 0.009
+        closestPoints = p.getClosestPoints(self.cubeUid, self._ur.urUid, maxDist)
+        if (len(closestPoints)):
+            self.terminated = 1
 
+            print("terminating, closing gripper, attempting grasp")
+            degreeOfGripper = 0.0
+            for i in range(100):
+                graspAction = [0., 0., 0.0001, 0., degreeOfGripper]
+                self._ur.applyAction(graspAction)
+                p.stepSimulation()
+                degreeOfGripper += 0.005
+                if (degreeOfGripper > 0.5):
+                    degreeOfGripper = 0.5
+
+            for i in range(1000):
+                graspAction = [0., 0., 0.001, 0, degreeOfGripper]
+                self._ur.applyAction(graspAction)
+                p.stepSimulation()
+                cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
+                if (cubePos[2] > 0.9):
+                    break
+                state = self._p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
+                actualEEPos = state[0]
+                if (actualEEPos[2] > 1.0):
+                    break
+            self._observation = self.getExtendedObservation()
+            return True
         return False
+
 
     def _check_accident(self):
         cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
@@ -345,7 +373,7 @@ class URGymEnv(gym.Env):
         # rewards is height of target object
         cubePos, cubeOrn = self._p.getBasePositionAndOrientation(self.cubeUid)
         # print(f'pos cube reward: ({cubePos[0]}, {cubePos[1]}, {cubePos[2]})')
-        closestPoints = self._p.getClosestPoints(self.cubeUid, self._ur.urUid, 2000, -1,
+        closestPoints = self._p.getClosestPoints(self.cubeUid, self._ur.urUid, 1000, -1,
                                            self._ur.urEndEffectorIndex)
         distance = self._distance_gripper_cube()
         reward = -1000
@@ -355,15 +383,19 @@ class URGymEnv(gym.Env):
         if (numPt > 0):
             # print("reward:")
             reward = -closestPoints[0][8] * 10
-            if (distance < 0.08):
-                reward = reward + 5000
 
-            self.isObjectCatched(0.035)
+            if (cubePos[2] > 0.95):
+                reward += 10000
+
+            # if (distance < 0.08):
+            #     reward = reward + 5000
+
+            # self.isObjectCatched(0.035)
 
             # if (cubePos[2] > 0.75):
-            if (self.catched):
-                # self.catched = True
-                reward = reward + 5000
+            # if (self.catched):
+            #     self.catched = True
+                # reward = reward + 5000
                 # print("successfully grasped a block!!!")
         return reward
 
