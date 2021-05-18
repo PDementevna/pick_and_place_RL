@@ -11,5 +11,6 @@ env_vec = DummyVecEnv([lambda: env])
 # env_checker.check_env(env, True, True)
 
 model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log='./ppo2_ur_tensorboard/')
-model.learn(total_timesteps=100000, tb_log_name="limited_sector_small")
-model.save("trained_models/ppo2_ur_limited_sector_small")
+
+model.learn(total_timesteps=10000000, tb_log_name="ppo2_trial1_10e7")
+model.save("trained_models/ppo2_trial1_10e7")
