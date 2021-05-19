@@ -23,7 +23,7 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 renders=False,
+                 renders=True,
                  isDiscrete=False,
                  maxSteps=20000):
         print("URGymEnv __init__")
@@ -94,7 +94,7 @@ class URGymEnv(gym.Env):
         self._p.resetSimulation()
         self._p.setPhysicsEngineParameter(numSolverIterations=150)
         self._p.setTimeStep(self._timeStep)
-        # self._p.setGravity(0, 0, -9.81)
+        self._p.setGravity(0, 0, -9.81)
 
         p.loadSDF('stadium.sdf')
 
@@ -176,6 +176,9 @@ class URGymEnv(gym.Env):
         # p.addUserDebugLine(gripperPos,[gripperPos[0]+dir2[0],gripperPos[1]+dir2[1],gripperPos[2]+dir2[2]],[0,0,1],lifeTime=1)
 
         self._observation.extend(list(cubeInGripperPosXYEulZ))
+
+        # TODO: make sure that this is the right coords (because the distance is stable for 0.14 m for trial3 model)
+
         return self._observation
 
     def isObjectCatched(self, threshold=0.05):
@@ -216,7 +219,7 @@ class URGymEnv(gym.Env):
             realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            dv = 0.005
+            dv = 0.001
             dx = action[0] * dv
             dy = action[1] * dv
             dz = action[2] * dv
@@ -249,9 +252,9 @@ class URGymEnv(gym.Env):
         # done = False
 
         npaction = np.array([
-            # action[0],
-            # action[1],
-            action[3]
+            action[0],
+            action[1],
+            # action[3]
         ])  # only penalize rotation until learning works well [action[0],action[1],action[3]])
         actionCost = np.linalg.norm(npaction) * 10.
         reward = self._reward() - actionCost
@@ -383,6 +386,7 @@ class URGymEnv(gym.Env):
         if (numPt > 0):
             # print("reward:")
             reward = -closestPoints[0][8] * 10
+            # print(f'dist from closest points: {closestPoints[0][8]}')
 
             if (cubePos[2] > 0.95):
                 reward += 10000
