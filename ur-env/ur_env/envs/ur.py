@@ -90,7 +90,7 @@ class UR:
         #                       [0.0, 0.5537298288314505, -1.1481937571631586, 1.5561487412923882, 1.093472799428354, 0.0, 0.0, 0.0]
         #                       [0.0, 0.5537298288314505, -1.1481937571631586, 1.5561487412923882, 1.093472799428354, 0.0, 0.0, 0.0]
         # final:                [0.0, 0.48002757997666934, -1.4129673165748495, 1.9689138336025802, 4.2199519480313885, -1.5707963267948966, 0.0, 0.0]
-        # for 0.45, 0.1, 1.0    [0.0, -0.055012701204166244, -1.3261254429073293, 1.8364445377448748, 4.2377985733831105, -1.5707963267948966, 0.0, 0.0]
+        # for 0.45, 0.1, 1.0   mipu9- [0.0, -0.055012701204166244, -1.3261254429073293, 1.8364445377448748, 4.2377985733831105, -1.5707963267948966, 0.0, 0.0]
 
 
         # print(f'joint pos: {jointPositions}')
@@ -110,6 +110,7 @@ class UR:
 
         jointRobotInitial = p.getJointStates(self.urUid, range(8))
 
+        # initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2]]
         # initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2]]
         initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2] - 0.12]
         initial_orientation_gripper = p.getQuaternionFromEuler([3.14, 0., 1.57])
@@ -144,8 +145,8 @@ class UR:
         # print(f'ee pos: {self.endEffectorPos}')
         robotEndEffectorState = p.getLinkState(self.urUid, self.urEndEffectorIndex)
 
-        # self.endEffectorAngle = robotEndEffectorState[1][2]
-        self.endEffectorAngle = p.getJointState(self.urUid, 6)[0]
+        self.endEffectorAngle = robotEndEffectorState[1][2]
+        # self.endEffectorAngle = p.getJointState(self.urUid, 6)[0]
         # print(f'angle of ee {self.endEffectorAngle}')
         self.degreeOfClosing = 0.
 
@@ -235,9 +236,9 @@ class UR:
             if (self.endEffectorPos[2] < 0.905):
                 # print('boundary z-')
                 self.endEffectorPos[2] = 0.905
-            if (self.endEffectorPos[2] > 1.05):
+            if (self.endEffectorPos[2] > 1.3):
                 # print('boundary z+')
-                self.endEffectorPos[2] = 1.05
+                self.endEffectorPos[2] = 1.3
 
             self.endEffectorAngle += da
             pos = self.endEffectorPos
@@ -259,7 +260,7 @@ class UR:
                     # jointPoses[5] -= math.pi / 2.0
                     # jointPoses[4] += math.pi
 
-                    jointPoses[6] = self.endEffectorAngle
+                    # jointPoses[6] = self.endEffectorAngle
 
                 else:
                     jointPoses = p.calculateInverseKinematics(self.urUid,
