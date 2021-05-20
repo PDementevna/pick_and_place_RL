@@ -22,8 +22,9 @@ def main():
 		for motorId in motorsIds:
 			action.append(environment._p.readUserDebugParameter(motorId))
 		state, reward, done, info = environment.step(action)
+		# environment.move_to_cube()
 		obs = environment.getExtendedObservation()
-		print(f'observation pos: {obs[0]}, {obs[1]}, {obs[2]}')
+		print(f'robot ee pos: {obs[0]}, {obs[1]}, {obs[2]}')
 
 
 # if __name__ == "__main__":

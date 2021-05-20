@@ -27,9 +27,12 @@ class UR:
             value = 0.
         return [value, 0., value, -value, -value, value, -value, 0.]
 
-    def getGripperPosLink(self, num_link):
+    def _getGripperPosLink(self, num_link):
         link_state = p.getLinkState(self.gripperUid, num_link)
         return link_state[0]
+
+    def getEEGripperPos(self):
+        finger1Pos = self._getGripperPosLink()
 
     def reset(self):
         p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
@@ -48,7 +51,7 @@ class UR:
         # self.jointPositions = [3.14, -1.57, -1.57, 1.570793, -1.57, -1.57, 0.0, 0.]
         ee_position = [0.45, 0.1, 1.00]
 
-        ee_orin = [1.57, 3.14, 0]
+        ee_orin = [math.pi / 2.0, math.pi, 0]
         # print(f'pi/2 = {math.pi / 2.}')
         # ee_orin = [math.pi / 2., math.pi , 0]
         ee_angle = p.getQuaternionFromEuler(ee_orin)
@@ -229,9 +232,9 @@ class UR:
                 self.endEffectorPos[1] = 0.25
 
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
-            if (self.endEffectorPos[2] < 0.915):
+            if (self.endEffectorPos[2] < 0.905):
                 # print('boundary z-')
-                self.endEffectorPos[2] = 0.915
+                self.endEffectorPos[2] = 0.905
             if (self.endEffectorPos[2] > 1.05):
                 # print('boundary z+')
                 self.endEffectorPos[2] = 1.05
