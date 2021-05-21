@@ -254,8 +254,6 @@ class URGymEnv(gym.Env):
         # self._observation.extend(list(cubeInGripperPosXYEulZ))
         self._observation.extend(list(cubeInGripperPosEEXYEulZ))
 
-        # TODO: make sure that this is the right coords (because the distance is stable for 0.14 m for trial3 model)
-
         return self._observation
 
     def isObjectCatched(self, threshold=0.05):
@@ -297,7 +295,7 @@ class URGymEnv(gym.Env):
             # realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            dv = 0.005
+            dv = 0.002
             dx = action[0] * dv
             dy = action[1] * dv
             dz = action[2] * dv
@@ -375,6 +373,7 @@ class URGymEnv(gym.Env):
         return rgb_array
 
     def _termination(self):
+        # print('termination process')
         # print (self._kuka.endEffectorPos[2])
         state = p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
         actualEndEffectorPos = state[0]
@@ -386,8 +385,9 @@ class URGymEnv(gym.Env):
             self._observation = self.getExtendedObservation()
             # print('termination')
             return True
-        maxDist = 0.02
-        closestPoints = p.getClosestPoints(self.cubeUid, self._ur.urUid, maxDist)
+        maxDist = 0.0101
+        closestPoints = p.getClosestPoints(self.cubeUid, self._ur.gripperUid, maxDist)
+        # print(f'len closest points: {len(closestPoints)}')
         if (len(closestPoints)):
             self.terminated = 1
 
@@ -395,19 +395,20 @@ class URGymEnv(gym.Env):
             degreeOfGripper = 0.0
 
             # close gripper
-            for i in range(100):
+            for i in range(1000):
                 print('gripper closing')
-                graspAction = [0., 0., 0.0, 0., degreeOfGripper]
+                graspAction = [0., 0., -0.0005, 0., degreeOfGripper]
                 self._ur.applyAction(graspAction)
                 p.stepSimulation()
-                degreeOfGripper += 0.005
-                if (degreeOfGripper > 0.5):
-                    degreeOfGripper = 0.5
+                degreeOfGripper += 0.00055
+                if (degreeOfGripper > 0.55):
+                    degreeOfGripper = 0.55
 
                 contactPointsLeft = p.getContactPoints(self._ur.gripperUid, self.cubeUid, 3, -1)
                 contactPointsRight = p.getContactPoints(self._ur.gripperUid, self.cubeUid, 5, -1)
                 distance = self._distance_gripper_cube(self.cubeUid)
-                if (len(contactPointsRight) > 0 or len(contactPointsLeft) > 0 or distance < 0.009):
+                # if (len(contactPointsRight) > 0 or len(contactPointsLeft) > 0 or distance < 0.009):
+                if (len(contactPointsRight) > 0 or len(contactPointsLeft) > 0):
                     print('the contact is established!')
                     # print(f'distance of contact is -- left: {contactPointsLeft[0][8]} -- right: {contactPointsRight[0][8]}')
                     self.catched = True
@@ -418,17 +419,18 @@ class URGymEnv(gym.Env):
             # lift the cube
             for i in range(2000):
                 print('gripper lifting')
-                graspAction = [0., 0., 0.001, 0, degreeOfGripper]
+                graspAction = [0., 0., 0.0001, 0, degreeOfGripper]
                 self._ur.applyAction(graspAction)
                 p.stepSimulation()
                 cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-                if (cubePos[2] > 0.75):
+                if (cubePos[2] > 0.8):
                     print('aaaaaa it is lifted!!!!')
                     break
                 state = self._p.getLinkState(self._ur.urUid, self._ur.urEndEffectorIndex)
                 actualEEPos = state[0]
                 if (actualEEPos[2] > 1.1):
                     break
+            time.sleep(1)
             self._observation = self.getExtendedObservation()
             return True
         return False
@@ -490,8 +492,8 @@ class URGymEnv(gym.Env):
             #     reward += 10000
             #     print('lifted the cube!!!')
 
-            if (distance <= 0.017):
-                reward = reward + 3000
+            if (distance <= 0.0101):
+                reward = reward + 10000
                 print('the cube is close!')
                 self._termination()
 
@@ -500,7 +502,7 @@ class URGymEnv(gym.Env):
             if (cubePos[2] > 0.75):
                 if (self.catched):
                     # self.catched = True
-                    reward = reward + 7000
+                    # reward = reward + 7000
                     print("successfully grasped a block!!!")
         return reward
 

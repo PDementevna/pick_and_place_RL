@@ -11,10 +11,10 @@ env_vec = DummyVecEnv([lambda: env])
 # env_checker.check_env(env, True, True)
 
 model = PPO2(MlpPolicy, env, verbose=1, tensorboard_log='./ppo2_ur_tensorboard/',
-             learning_rate=2e-7,
-             n_steps=256,
-             nminibatches=8
+             # learning_rate=2e-7,
+             # n_steps=256,
+             # nminibatches=8
 )
 
-model.learn(total_timesteps=10000000, tb_log_name="ppo2_trial10_10e7")
-model.save("trained_models/ppo2_trial10_10e7")
+model.learn(total_timesteps=10000000, tb_log_name="ppo2_trial13_10e7")
+model.save("trained_models/ppo2_trial13_10e7")
