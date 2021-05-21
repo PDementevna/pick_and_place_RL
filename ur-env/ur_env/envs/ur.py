@@ -211,34 +211,41 @@ class UR:
             self.degreeOfClosing = motorCommands[4]
 
             state = p.getLinkState(self.urUid, self.urEndEffectorIndex, computeForwardKinematics=True)
+            gripperPose = p.getLinkState(self.gripperUid, 0, computeForwardKinematics=True)
             actualEndEffectorPos = state[0]
+            # print()
             # print(f'actual ee pos: {actualEndEffectorPos}')
+            # print(f'gripper pos: {gripperPose}')
             # self.printPosLinks()
             # print(f'set ee pos: {self.endEffectorPos}')
 
             self.endEffectorPos[0] = self.endEffectorPos[0] + dx
-            if (self.endEffectorPos[0] > 0.90):
+
+
+            if (self.endEffectorPos[0] > 0.60):
                 # print('boundary x+')
-                self.endEffectorPos[0] = 0.90
-            if (self.endEffectorPos[0] < 0.0):
+                self.endEffectorPos[0] = 0.60
+            if (self.endEffectorPos[0] < 0.45):
                 # print('boundary x-')
-                self.endEffectorPos[0] = 0.0
+                self.endEffectorPos[0] = 0.45
 
             self.endEffectorPos[1] = self.endEffectorPos[1] + dy
-            if (self.endEffectorPos[1] < -0.05):
+            if (self.endEffectorPos[1] < 0.0):
                 # print('boundary y-')
-                self.endEffectorPos[1] = -0.05
-            if (self.endEffectorPos[1] > 0.25):
+                self.endEffectorPos[1] = 0.0
+            if (self.endEffectorPos[1] > 0.11):
                 # print('boundary y+')
-                self.endEffectorPos[1] = 0.25
+                self.endEffectorPos[1] = 0.11
 
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
-            if (self.endEffectorPos[2] < 0.90):
+            if (self.endEffectorPos[2] < 0.88):
                 # print('boundary z-')
-                self.endEffectorPos[2] = 0.90
-            if (self.endEffectorPos[2] > 1.3):
+                self.endEffectorPos[2] = 0.88
+            if (self.endEffectorPos[2] > 1.1):
                 # print('boundary z+')
-                self.endEffectorPos[2] = 1.3
+                self.endEffectorPos[2] = 1.1
+
+
 
             self.endEffectorAngle += da
             pos = self.endEffectorPos
