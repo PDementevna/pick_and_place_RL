@@ -296,7 +296,7 @@ class URGymEnv(gym.Env):
             # realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            dv = 0.004
+            dv = 0.002
             dx = action[0] * dv
             dy = action[1] * dv
             dz = action[2] * dv
@@ -307,8 +307,8 @@ class URGymEnv(gym.Env):
             gripperState = 0.0
             # gripperState = action[4] * 0.008
             # realAction = [dx, dy, -0.00005, da, gripperState]
-            realAction = [dx, dy, -0.00005, da, gripperState]
-            # realAction = [dx, dy, dz, da, gripperState]
+            # realAction = [dx, dy, -0.00005, da, gripperState]
+            realAction = [dx, dy, dz, da, gripperState]
             # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         return self.step2(realAction)
 
