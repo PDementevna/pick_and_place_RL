@@ -23,7 +23,7 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 renders=False,
+                 renders=True,
                  isDiscrete=False,
                  maxSteps=20000):
         print("URGymEnv __init__")
