@@ -51,7 +51,7 @@ class UR:
         # self.jointPositions = [3.14, -1.57, -1.57, 1.570793, -1.57, -1.57, 0.0, 0.]
         ee_position = [0.45, 0.1, 1.00]
 
-        ee_orin = [math.pi / 2.0, math.pi, 0]
+        ee_orin = [math.pi / 2.0, math.pi, -math.pi / 2.]
         # print(f'pi/2 = {math.pi / 2.}')
         # ee_orin = [math.pi / 2., math.pi , 0]
         ee_angle = p.getQuaternionFromEuler(ee_orin)
@@ -62,27 +62,11 @@ class UR:
                                                   # jointDamping=self.jd
                                                   )
 
-        jointPositions1 = p.calculateInverseKinematics(self.urUid,
-                                                       7,
-                                                       ee_position,
-                                                       ee_angle,
-                                                       jointDamping=self.jd
-                                                       )
 
 
         jointPositions = list(jointPositions)
         jointPositions.insert(0, 0.0)
         jointPositions.append(0.0)
-
-        # jointPositions[5] -= math.pi / 2.0    # pos 0.4, 0.4, 1.0
-        # jointPositions[4] += math.pi
-
-        jointPositions1 = list(jointPositions1)
-        jointPositions1.insert(0, 0.0)
-        jointPositions1.append(0.0)
-
-        # jointPositions1[5] -= math.pi / 2.0  # pos 0.4, 0.4, 1.0
-        # jointPositions1[4] += math.pi
 
         # self.jointPositions = jointPositions
         self.jointPositions = jointPositions
@@ -91,10 +75,6 @@ class UR:
         #                       [0.0, 0.5537298288314505, -1.1481937571631586, 1.5561487412923882, 1.093472799428354, 0.0, 0.0, 0.0]
         # final:                [0.0, 0.48002757997666934, -1.4129673165748495, 1.9689138336025802, 4.2199519480313885, -1.5707963267948966, 0.0, 0.0]
         # for 0.45, 0.1, 1.0   mipu9- [0.0, -0.055012701204166244, -1.3261254429073293, 1.8364445377448748, 4.2377985733831105, -1.5707963267948966, 0.0, 0.0]
-
-
-        # print(f'joint pos: {jointPositions}')
-        # print(f'joint1 pos: {jointPositions1}')
 
 
 
@@ -113,7 +93,7 @@ class UR:
         # initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2]]
         # initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2]]
         initial_position_gripper = [ee_state[0][0], ee_state[0][1], ee_state[0][2] - 0.12]
-        initial_orientation_gripper = p.getQuaternionFromEuler([3.14, 0., 1.57])
+        initial_orientation_gripper = p.getQuaternionFromEuler([math.pi, 0., math.pi / 2.0])
 
         p.resetBasePositionAndOrientation(self.gripperUid, initial_position_gripper, initial_orientation_gripper)
         # print(f'gripper base pos: {p.getLinkState(self.gripperUid, 0)[0]}')
@@ -124,7 +104,7 @@ class UR:
         p.setJointMotorControlArray(self.gripperUid, range(8), p.POSITION_CONTROL, joints)
 
         parentFrameOrientation = p.getQuaternionFromEuler([0., 0., 0])
-        childFrameOrientation = p.getQuaternionFromEuler([1.57, 0, 0])
+        childFrameOrientation = p.getQuaternionFromEuler([math.pi / 2., 0, 0])
 
 
         self.constraintGripper = p.createConstraint(self.urUid, 6,
@@ -145,7 +125,8 @@ class UR:
         # print(f'ee pos: {self.endEffectorPos}')
         robotEndEffectorState = p.getLinkState(self.urUid, self.urEndEffectorIndex)
 
-        self.endEffectorAngle = robotEndEffectorState[1][2]
+        # self.endEffectorAngle = robotEndEffectorState[1][2]
+        self.endEffectorAngle = math.pi / 2.0
         # self.endEffectorAngle = p.getJointState(self.urUid, 6)[0]
         # print(f'angle of ee {self.endEffectorAngle}')
         self.degreeOfClosing = 0.
@@ -208,6 +189,7 @@ class UR:
             dy = motorCommands[1]
             dz = motorCommands[2]
             da = motorCommands[3]
+            # print(f'action[3]: {motorCommands[3]}')
             self.degreeOfClosing = motorCommands[4]
 
             state = p.getLinkState(self.urUid, self.urEndEffectorIndex, computeForwardKinematics=True)
@@ -222,20 +204,20 @@ class UR:
             self.endEffectorPos[0] = self.endEffectorPos[0] + dx
 
 
-            if (self.endEffectorPos[0] > 0.60):
+            if (self.endEffectorPos[0] > 0.52):
                 # print('boundary x+')
-                self.endEffectorPos[0] = 0.60
-            if (self.endEffectorPos[0] < 0.45):
+                self.endEffectorPos[0] = 0.52
+            if (self.endEffectorPos[0] < 0.38):
                 # print('boundary x-')
-                self.endEffectorPos[0] = 0.45
+                self.endEffectorPos[0] = 0.38
 
             self.endEffectorPos[1] = self.endEffectorPos[1] + dy
-            if (self.endEffectorPos[1] < 0.0):
+            if (self.endEffectorPos[1] < -0.02):
                 # print('boundary y-')
-                self.endEffectorPos[1] = 0.0
-            if (self.endEffectorPos[1] > 0.11):
+                self.endEffectorPos[1] = -0.02
+            if (self.endEffectorPos[1] > 0.13):
                 # print('boundary y+')
-                self.endEffectorPos[1] = 0.11
+                self.endEffectorPos[1] = 0.13
 
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
             if (self.endEffectorPos[2] < 0.88):
@@ -254,6 +236,7 @@ class UR:
             # orn[1] += self.endEffectorAngle
             # orn = p.getQuaternionFromEuler(orn)
             ee_orin = [math.pi / 2., math.pi, self.endEffectorAngle]
+            # print(f'ee orientation: {ee_orin}')
             # print(f'pi/2 = {math.pi / 2.}')
             # ee_orin = [math.pi / 2., math.pi , 0]
             ee_angle = p.getQuaternionFromEuler(ee_orin)
@@ -317,8 +300,10 @@ class UR:
                     p.resetJointState(self.urUid, i, jointPoses[i])
             # fingers
             jointPosesGripper = self.getGripperJoints()
+            # print(f'len of joints gripper: {jointPosesGripper}')
+            force = 100
             p.setJointMotorControlArray(self.gripperUid, range(8), p.POSITION_CONTROL,
-                                        jointPosesGripper)
+                                        jointPosesGripper, forces=[force, force, force, force, force, force, force, force])
 
         else:
             for action in range(len(motorCommands)):
