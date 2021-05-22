@@ -220,9 +220,9 @@ class UR:
                 self.endEffectorPos[1] = 0.13
 
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
-            if (self.endEffectorPos[2] < 0.88):
+            if (self.endEffectorPos[2] < 0.90):
                 # print('boundary z-')
-                self.endEffectorPos[2] = 0.88
+                self.endEffectorPos[2] = 0.90
             if (self.endEffectorPos[2] > 1.1):
                 # print('boundary z+')
                 self.endEffectorPos[2] = 1.1

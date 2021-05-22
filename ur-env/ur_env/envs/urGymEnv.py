@@ -25,7 +25,7 @@ class URGymEnv(gym.Env):
                  isEnableSelfCollision=True,
                  renders=False,
                  isDiscrete=False,
-                 maxSteps=20000):
+                 maxSteps=10000):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
         self._timeStep = 0.01
@@ -63,7 +63,7 @@ class URGymEnv(gym.Env):
         if (self._isDiscrete):
             self.action_space = spaces.Discrete(7)
         else:
-            action_dim = 5
+            action_dim = 2
             self._action_bound = 1
             action_high = np.array([self._action_bound] * action_dim)
             self.action_space = spaces.Box(-action_high, action_high)
@@ -185,13 +185,14 @@ class URGymEnv(gym.Env):
 
         x_pos = baseX + self.cubeXLim[0]
         y_pos = baseY + self.cubeYLim[0]
-        # x_pos = 0.45
+
+        # x_pos = 0.47
         # y_pos = 0.1
 
         # orient = np.random.rand() * 3.14
         orient = 0.0
         angles = p.getQuaternionFromEuler([0., 0., orient])
-        print(f'x cube pos: {x_pos}, y cube pos: {y_pos}')
+        # print(f'x cube pos: {x_pos}, y cube pos: {y_pos}')
         return [[x_pos, y_pos, z_coord], angles]
 
     def cubeRandomPlace(self):
@@ -260,7 +261,7 @@ class URGymEnv(gym.Env):
 
         # we return the relative x,y position and euler angle of block in gripper space
         cubeInGripperPosXYEulZ = [cubePosInGripper[0], cubePosInGripper[1], cubeEulerInGripper[2]]
-        cubeInGripperPosEEXYEulZ = [cubePosInGripperEE[0], cubePosInGripperEE[1], cubeEulerInGripper[2]]
+        cubeInGripperPosEEXYEulZ = [cubePosInGripperEE[0], cubePosInGripperEE[1], cubePosInGripperEE[2], cubeEulerInGripper[2]]
 
         # p.addUserDebugLine(gripperPos,[gripperPos[0]+dir0[0],gripperPos[1]+dir0[1],gripperPos[2]+dir0[2]],[1,0,0],lifeTime=1)
         # p.addUserDebugLine(gripperPos,[gripperPos[0]+dir1[0],gripperPos[1]+dir1[1],gripperPos[2]+dir1[2]],[0,1,0],lifeTime=1)
@@ -310,17 +311,19 @@ class URGymEnv(gym.Env):
             # realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            dv = 0.004
+            dv = 0.005
             dx = action[0] * dv
             dy = action[1] * dv
-            dz = action[2] * dv
+            # dz = action[2] * dv
             # da = 0.05
+
+            # CHANGE actionDIM!!!
             # da = action[3] * 0.005
             da = 0.0
             # f = self.gripperOpenning()
             gripperState = 0.0
             # gripperState = action[4] * 0.008
-            realAction = [dx, dy, -0.00005, da, gripperState]
+            realAction = [dx, dy, -0.002, da, gripperState]
             # realAction = [dx, dy, -0.00005, da, gripperState]
             # realAction = [dx, dy, dz, da, gripperState]
             # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
@@ -453,20 +456,28 @@ class URGymEnv(gym.Env):
                 actualGripperPos = state[0]
                 if (actualGripperPos[2] > 0.85):
                     break
+
+                # curCubePos, curCubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
+                # if (curCubePos[0] > self.cubeXLim[1] or curCubePos[0] < self.cubeXLim[0]):
+                #     print('the robot is accidentally moved the cube outside of X working zone')
+                #     break
+                # if (curCubePos[1] > self.cubeYLim[1] or curCubePos[1] < self.cubeYLim[0]):
+                #     print('the robot is accidentally moved the cube outside of Y working zone')
+                #     break
             # time.sleep(1)
             self._observation = self.getExtendedObservation()
             return True
         return False
 
 
-    def _check_accident(self):
-        cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
-        if (cubePos[0] != self.pos_orient_object[0][0]
-                or cubePos[1] != self.pos_orient_object[0][1]
-                or cubePos[2] != self.pos_orient_object[0][2]):
-            if (not self.catched):
-                self.terminated = 1
-                print('accident!! ')
+    # def _check_accident(self):
+    #     cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
+    #     if (cubePos[0] != self.pos_orient_object[0][0]
+    #             or cubePos[1] != self.pos_orient_object[0][1]
+    #             or cubePos[2] != self.pos_orient_object[0][2]):
+    #         if (not self.catched):
+    #             self.terminated = 1
+    #             print('accident!! ')
 
     def _distance_gripper_cube(self, cubeID):
         # cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
