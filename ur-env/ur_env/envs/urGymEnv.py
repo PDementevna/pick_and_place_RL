@@ -185,6 +185,8 @@ class URGymEnv(gym.Env):
 
         x_pos = baseX + self.cubeXLim[0]
         y_pos = baseY + self.cubeYLim[0]
+        # x_pos = 0.45
+        # y_pos = 0.1
 
         # orient = np.random.rand() * 3.14
         orient = 0.0
@@ -435,9 +437,12 @@ class URGymEnv(gym.Env):
 
 
             # lift the cube
-            for i in range(2000):
+            for i in range(1000):
                 print('gripper lifting')
-                graspAction = [0., 0., 0.0001, 0, degreeOfGripper]
+                graspAction = [0., 0., 0.0005, 0, degreeOfGripper]
+                degreeOfGripper += 0.0001
+                if (degreeOfGripper > 0.7):
+                    degreeOfGripper = 0.7
                 self._ur.applyAction(graspAction)
                 p.stepSimulation()
                 cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
