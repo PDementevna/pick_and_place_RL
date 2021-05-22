@@ -23,7 +23,7 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 renders=False,
+                 renders=True,
                  isDiscrete=False,
                  maxSteps=20000):
         print("URGymEnv __init__")
@@ -51,8 +51,10 @@ class URGymEnv(gym.Env):
             p.connect(p.DIRECT)
         self.seed()
 
-        self.cubeXLim = [0.4, 0.5]
-        self.cubeYLim = [0.0, 0.1]
+        # self.cubeXLim = [0.4, 0.5]
+        self.cubeXLim = [0.4, 0.6]
+        # self.cubeYLim = [0.0, 0.1]
+        self.cubeYLim = [-0.2, 0.2]
 
         self.trayPos = [0.640000, 0.075000, 0.63]
 
@@ -147,7 +149,7 @@ class URGymEnv(gym.Env):
 
         # CREATING THE CUBE
         self.cubeRandomPlace()
-        self._p.changeVisualShape(self.cubeUid, 1, rgbaColor=[0.7, 0.15, 0.15, 1.0])
+        self._p.changeVisualShape(self.cubeUid, 1, rgbaColor=[0.022, 0.223, 0.026, 1.0])
 
         # p.loadURDF("cube_small.urdf", [self.cubeXLim[0], self.cubeYLim[0], 0.65])
         # p.loadURDF("cube_small.urdf", [self.cubeXLim[0], self.cubeYLim[1], 0.65])
@@ -308,7 +310,7 @@ class URGymEnv(gym.Env):
             # realAction = [dx, dy, -0.002, da, f]
             # print(f'realAction right: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
         else:
-            dv = 0.004
+            dv = 0.003
             dx = action[0] * dv
             dy = action[1] * dv
             dz = action[2] * dv
@@ -318,7 +320,7 @@ class URGymEnv(gym.Env):
             # f = self.gripperOpenning()
             gripperState = 0.0
             # gripperState = action[4] * 0.008
-            realAction = [dx, dy, -0.00005, da, gripperState]
+            realAction = [dx, dy, -0.0002, da, gripperState]
             # realAction = [dx, dy, -0.00005, da, gripperState]
             # realAction = [dx, dy, dz, da, gripperState]
             # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
@@ -435,9 +437,14 @@ class URGymEnv(gym.Env):
 
 
             # lift the cube
-            for i in range(2000):
+            for i in range(1000):
                 print('gripper lifting')
-                graspAction = [0., 0., 0.0001, 0, degreeOfGripper]
+                graspAction = [0., 0., 0.0005, 0, degreeOfGripper]
+
+                degreeOfGripper += 0.0001
+                if (degreeOfGripper > 0.7):
+                    degreeOfGripper = 0.7
+
                 self._ur.applyAction(graspAction)
                 p.stepSimulation()
                 cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)

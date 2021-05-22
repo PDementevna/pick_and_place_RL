@@ -204,25 +204,25 @@ class UR:
             self.endEffectorPos[0] = self.endEffectorPos[0] + dx
 
 
-            if (self.endEffectorPos[0] > 0.52):
+            if (self.endEffectorPos[0] > 0.62):
                 # print('boundary x+')
-                self.endEffectorPos[0] = 0.52
+                self.endEffectorPos[0] = 0.62
             if (self.endEffectorPos[0] < 0.38):
                 # print('boundary x-')
                 self.endEffectorPos[0] = 0.38
 
             self.endEffectorPos[1] = self.endEffectorPos[1] + dy
-            if (self.endEffectorPos[1] < -0.02):
+            if (self.endEffectorPos[1] < -0.22):
                 # print('boundary y-')
-                self.endEffectorPos[1] = -0.02
-            if (self.endEffectorPos[1] > 0.13):
+                self.endEffectorPos[1] = -0.22
+            if (self.endEffectorPos[1] > 0.23):
                 # print('boundary y+')
-                self.endEffectorPos[1] = 0.13
+                self.endEffectorPos[1] = 0.23
 
             self.endEffectorPos[2] = self.endEffectorPos[2] + dz
-            if (self.endEffectorPos[2] < 0.88):
+            if (self.endEffectorPos[2] < 0.90):
                 # print('boundary z-')
-                self.endEffectorPos[2] = 0.88
+                self.endEffectorPos[2] = 0.90
             if (self.endEffectorPos[2] > 1.1):
                 # print('boundary z+')
                 self.endEffectorPos[2] = 1.1
