@@ -5,3 +5,4 @@ pybullet==3.1.6
 stable-baselines==2.10.2
 tensorboard==1.15.0
 tensorflow==1.15.0
+-e git+https://github.com/PDementevna/pick_and_place_RL.git@80b69a7b683b6efcf56be8d246e08b53ef324cb0#egg=ur_env&subdirectory=ur-env

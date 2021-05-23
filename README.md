@@ -29,10 +29,6 @@ Install necessary packages for python:
 
 `pip install -r requirements.txt`
 
-Install the custom environment:
-
-`pip install -e ur-env`
-
 ## Train
 
 For training the model, it is possible to  launch a training script
