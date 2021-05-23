@@ -23,11 +23,11 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 # renders=False,
-                 renders=True,
+                 renders=False,
+                 # renders=True,
                  isDiscrete=False,
                  maxSteps=20000,
-                 cubeOrien=False):
+                 cubeOrien=True):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
         self._timeStep = 0.01
@@ -352,7 +352,8 @@ class URGymEnv(gym.Env):
 
             # close gripper
             for i in range(100):
-                print('gripper is closing')
+                if (i == 1):
+                    print('gripper is closing')
                 graspAction = [0., 0., -0.00002, 0., degreeOfGripper]
                 self._ur.applyAction(graspAction)
                 p.stepSimulation()
@@ -375,7 +376,8 @@ class URGymEnv(gym.Env):
 
             # lift the cube
             for i in range(1000):
-                print('gripper lifting')
+                if (i == 1):
+                    print('gripper lifting')
                 graspAction = [0., 0., 0.0005, 0, degreeOfGripper]
 
                 degreeOfGripper += 0.0001
@@ -401,14 +403,16 @@ class URGymEnv(gym.Env):
             zStep = (self.placePoint[2] - currPos[2]) / numIter
 
             for i in range(numIter):
-                print('gripper moving')
+                if (i == 1):
+                    print('gripper moving')
 
                 moveAction = [xStep, yStep, zStep, 0, degreeOfGripper]
                 self._ur.applyAction(moveAction)
                 p.stepSimulation()
 
             for i in range(50):
-                print('gripper is opening')
+                if (i == 1):
+                    print('gripper is opening')
                 contactPoints = p.getClosestPoints(self.trayUid, self.cubeUid, 0.01)
                 openAction = [0., 0., 0., 0., -0.005]
                 self._ur.applyAction(openAction)

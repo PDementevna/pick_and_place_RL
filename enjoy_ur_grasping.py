@@ -10,7 +10,7 @@ model = PPO2.load("trained_models/ppo2_trial16_10e7")
 
 
 def evaluate_performance():
-    numIterations = 10
+    numIterations = 1000
     caught = []
     lifted = []
     moved = []
@@ -38,17 +38,17 @@ def evaluate_performance():
     print(f'moved: {moved}')
 
 
-obs = env.reset()
-done = False
-#
-while not done:
-    action, _states = model.predict(obs)
-    obs, rewards, done, info = env.step(action)
-    # print(f'reward: {rewards}')
-    print(f'info: {info}')
-    env.render(mode='human')
+# obs = env.reset()
+# done = False
+# #
+# while not done:
+#     action, _states = model.predict(obs)
+#     obs, rewards, done, info = env.step(action)
+#     # print(f'reward: {rewards}')
+#     print(f'info: {info}')
+#     env.render(mode='human')
 
 
-# evaluate_performance()
+evaluate_performance()
 
 
