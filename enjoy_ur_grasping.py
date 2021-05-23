@@ -8,7 +8,6 @@ env = gym.make('ur_env:ur-v0')
 env_vec = DummyVecEnv([lambda: env])
 model = PPO2.load("trained_models/ppo2_trial18_10e7")
 
-
 def evaluate_performance():
     numIterations = 1000
     caught = []
