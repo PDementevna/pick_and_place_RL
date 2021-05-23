@@ -174,7 +174,7 @@ class URGymEnv(gym.Env):
         cubeEulerInGripper = p.getEulerFromQuaternion(cubeOrnInGripperEE)
 
         # we return the relative x,y,z position and euler angle of block in gripper space
-        cubeInGripperPosEEXYEulZ = [cubePosInGripperEE[0], cubePosInGripperEE[1], cubePosInGripperEE[2], cubeEulerInGripper[2]]
+        cubeInGripperPosEEXYEulZ = [cubePosInGripperEE[0], cubePosInGripperEE[1], cubeEulerInGripper[2]]
         self._observation.extend(list(cubeInGripperPosEEXYEulZ))
 
         return self._observation
