@@ -23,10 +23,11 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 renders=False,
-                 # renders=True,
+                 # renders=False,
+                 renders=True,
                  isDiscrete=False,
-                 maxSteps=20000):
+                 maxSteps=20000,
+                 cubeOrien=False):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
         self._timeStep = 0.01
@@ -37,6 +38,7 @@ class URGymEnv(gym.Env):
         self._envStepCounter = 0
         self._renders = renders
         self._maxSteps = maxSteps
+        self.cubeOrn = cubeOrien
         self.terminated = 0
         self._cam_dist = 3
         self._cam_yaw = 130
@@ -58,10 +60,12 @@ class URGymEnv(gym.Env):
             p.connect(p.DIRECT)
         self.seed()
 
-        self.cubeXLim = [0.4, 0.5]
-        self.cubeYLim = [0.0, 0.1]
+        # self.cubeXLim = [0.4, 0.5]
+        self.cubeXLim = [0.4, 0.7]
+        # self.cubeYLim = [0.0, 0.1]
+        self.cubeYLim = [-0.2, 0.3]
 
-        self.trayPos = [0.640000, 0.075000, 0.63]
+        self.trayPos = [0.640000, -0.6, 0.63]
 
         self.reset()
         observationDim = len(self.getExtendedObservation())
@@ -97,9 +101,11 @@ class URGymEnv(gym.Env):
         self.tableUid = p.loadURDF("models/table_custom/table.urdf", [0., 0., 0.])
         self._p.changeVisualShape(self.tableUid, 1, rgbaColor=[0.466, 0.341, 0.172, 1.0])
 
-        # self.trayUid = p.loadURDF("tray/tray.urdf",
-        #                           self.trayPos,
-        #                           [0.000000, 0.000000, 1.000000, 0.000000])
+        self.trayUid = p.loadURDF("models/tray/tray.urdf",
+                                  self.trayPos,
+                                  [0.000000, 0.000000, 1.000000, 0.000000])
+        self._p.changeVisualShape(self.trayUid, 1, rgbaColor=[0.124, 0.090, 0.083, 1.0])
+
         self._ur = ur.UR(timeStep=self._timeStep)
         self.ee_state = p.getLinkState(self._ur.urUid, 6)
         self.pos_orient_object = self.getRandomPosOrient(0.65)
@@ -131,9 +137,13 @@ class URGymEnv(gym.Env):
 
         x_pos = baseX + self.cubeXLim[0]
         y_pos = baseY + self.cubeYLim[0]
+        # x_pos = 0.45
+        # y_pos = 0.1
 
-        orient = np.random.rand() * (math.pi / 2.0)
-        # orient = 0.0
+        if (self.cubeOrn):
+            orient = np.random.rand() * (math.pi / 2.0)
+        else:
+            orient = 0.0
         angles = p.getQuaternionFromEuler([0., 0., orient])
         # print(f'x cube pos: {x_pos}, y cube pos: {y_pos}')
         return [[x_pos, y_pos, z_coord], angles]
@@ -241,8 +251,8 @@ class URGymEnv(gym.Env):
             # f = self.gripperOpenning()
             gripperState = 0.0
             # gripperState = action[4] * 0.008
-            realAction = [dx, dy, -0.005, da, gripperState]
-            # realAction = [dx, dy, -0.0002, da, gripperState]
+            # realAction = [dx, dy, -0.005, da, gripperState]
+            realAction = [dx, dy, -0.0002, da, gripperState]
             # realAction = [dx, dy, -0.00005, da, gripperState]
             # realAction = [dx, dy, dz, da, gripperState]
             # print(f'realAction else: ({realAction[0], realAction[1], realAction[2], realAction[3], realAction[4]}')
@@ -377,13 +387,39 @@ class URGymEnv(gym.Env):
                 cubePos, cubeOrn = p.getBasePositionAndOrientation(self.cubeUid)
                 if (cubePos[2] > 0.76):
                     print('aaaaaa it is lifted!!!!')
+                    self.lifted = True
                     break
                 state = self._p.getLinkState(self._ur.gripperUid, 1)
                 actualGripperPos = state[0]
                 if (actualGripperPos[2] > 0.85):
                     break
-            # time.sleep(1)
+
+
+            currPos = p.getLinkState(self._ur.urUid, 6)[0]
+            xStep = (self.placePoint[0] - currPos[0]) / numIter
+            yStep = (self.placePoint[1] - currPos[1]) / numIter
+            zStep = (self.placePoint[2] - currPos[2]) / numIter
+
+            for i in range(numIter):
+                print('gripper moving')
+
+                moveAction = [xStep, yStep, zStep, 0, degreeOfGripper]
+                self._ur.applyAction(moveAction)
+                p.stepSimulation()
+
+            for i in range(50):
+                print('gripper is opening')
+                contactPoints = p.getClosestPoints(self.trayUid, self.cubeUid, 0.01)
+                openAction = [0., 0., 0., 0., -0.005]
+                self._ur.applyAction(openAction)
+                p.stepSimulation()
+                if (len(contactPoints) > 0):
+                    print('the cube is place successfully')
+                    self.moved = True
+                    break
+
             self._observation = self.getExtendedObservation()
+            self._setInfo(self.catched, self.lifted, self.moved)
             return True
         return False
 
