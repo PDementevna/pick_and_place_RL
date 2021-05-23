@@ -5,7 +5,7 @@ from stable_baselines.common.vec_env import DummyVecEnv
 
 env = gym.make('ur_env:ur-v0')
 env_vec = DummyVecEnv([lambda: env])
-model = PPO2.load("trained_models/ppo2_trial16_advanced_10e7")
+model = PPO2.load("trained_models/ppo2_trial21_10e7")
 
 # Enjoy trained agent
 obs = env.reset()
