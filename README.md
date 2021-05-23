@@ -75,3 +75,6 @@ As it all new for me, I did my best to achieve the results in grasping
 and it's challenging.
 Whatever you decide about me, it was nice to try all those things,
 thank you. 
+
+
+![Alt Text](https://github.com/PDementevna/pick_and_place_RL/blob/env_with_orn/video/withoutOrn.gif)
