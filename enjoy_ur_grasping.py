@@ -46,6 +46,7 @@ done = False
 while not done:
     action, _states = model.predict(obs)
     obs, rewards, done, info = env.step(action)
+    print(f'reward: {rewards}')
     env.render(mode='human')
 
 # evaluation
