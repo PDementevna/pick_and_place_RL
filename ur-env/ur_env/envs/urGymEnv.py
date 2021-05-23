@@ -23,10 +23,11 @@ class URGymEnv(gym.Env):
                  urdfRoot=pybullet_data.getDataPath(),
                  actionRepeat=1,
                  isEnableSelfCollision=True,
-                 renders=False,
-                 # renders=True,
+                 # renders=False,
+                 renders=True,
                  isDiscrete=False,
-                 maxSteps=20000):
+                 maxSteps=20000,
+                 cubeOrien=False):
         print("URGymEnv __init__")
         self._isDiscrete = isDiscrete
         self._timeStep = 0.01
@@ -37,6 +38,7 @@ class URGymEnv(gym.Env):
         self._envStepCounter = 0
         self._renders = renders
         self._maxSteps = maxSteps
+        self.cubeOrn = cubeOrien
         self.terminated = 0
         self._cam_dist = 3
         self._cam_yaw = 130
@@ -61,7 +63,7 @@ class URGymEnv(gym.Env):
         # self.cubeXLim = [0.4, 0.5]
         self.cubeXLim = [0.4, 0.7]
         # self.cubeYLim = [0.0, 0.1]
-        self.cubeYLim = [-0.3, 0.3]
+        self.cubeYLim = [-0.2, 0.3]
 
         self.trayPos = [0.640000, -0.6, 0.63]
 
@@ -138,8 +140,10 @@ class URGymEnv(gym.Env):
         # x_pos = 0.45
         # y_pos = 0.1
 
-        # orient = np.random.rand() * (math.pi / 2.0)
-        orient = 0.0
+        if (self.cubeOrn):
+            orient = np.random.rand() * (math.pi / 2.0)
+        else:
+            orient = 0.0
         angles = p.getQuaternionFromEuler([0., 0., orient])
         # print(f'x cube pos: {x_pos}, y cube pos: {y_pos}')
         return [[x_pos, y_pos, z_coord], angles]

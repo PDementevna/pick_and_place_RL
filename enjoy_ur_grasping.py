@@ -37,18 +37,18 @@ def evaluate_performance():
     print(f'lifted: {lifted}')
     print(f'moved: {moved}')
 
-# Enjoy trained agent
-# obs = env.reset()
-# done = False
-# #
-# while not done:
-#     action, _states = model.predict(obs)
-#     obs, rewards, done, info = env.step(action)
-#     # print(f'reward: {rewards}')
-#     print(f'info: {info}')
-#     env.render(mode='human')
+
+obs = env.reset()
+done = False
+#
+while not done:
+    action, _states = model.predict(obs)
+    obs, rewards, done, info = env.step(action)
+    # print(f'reward: {rewards}')
+    print(f'info: {info}')
+    env.render(mode='human')
 
 
-evaluate_performance()
+# evaluate_performance()
 
 
