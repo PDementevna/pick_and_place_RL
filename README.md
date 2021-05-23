@@ -77,4 +77,5 @@ Whatever you decide about me, it was nice to try all those things,
 thank you. 
 
 
-![Alt Text](https://github.com/PDementevna/pick_and_place_RL/blob/env_with_orn/video/withoutOrn.gif)
+<!-- ![Alt Text](https://github.com/PDementevna/pick_and_place_RL/blob/env_with_orn/video/withoutOrn.gif) -->
+<img src="https://github.com/PDementevna/pick_and_place_RL/raw/env_with_orn/video/withoutOrn.gif" width="200" height="200">
