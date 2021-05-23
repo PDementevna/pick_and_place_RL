@@ -8,6 +8,5 @@ model = PPO2.load("trained_models/ppo2_trial16_10e7.zip")
 
 model.set_env(env_vec)
 
-# obs = env.reset()
 model.learn(total_timesteps=10000000, tb_log_name="ppo2_trial16_advanced_10e7")
 model.save("trained_models/ppo2_trial16_advanced_10e7")

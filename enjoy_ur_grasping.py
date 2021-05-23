@@ -1,5 +1,4 @@
 import gym
-import imageio
 import numpy as np
 from stable_baselines import PPO2
 from stable_baselines.common.vec_env import DummyVecEnv
@@ -38,24 +37,26 @@ def evaluate_performance():
     lifted = np.asarray(lifted)
     moved = np.asarray(moved)
     print(f'caught cubes with orientation: {len(caught[caught == True])} out of {numIterations} -- {len(caught[caught == True]) / numIterations} %')
-    print(f'lifted cubes with orientation: {len(lifted[lifted == True])} out of {numIterations} -- {len(lifted[lifted == True]) / numIterations} %')
-    print(f'moved cubes with orientation: {len(moved[moved == True])} out of {numIterations} -- {len(moved[moved == True]) / numIterations} %')
+    print(f'lifted cubes with orientation: {len(lifted[lifted == True])} out of {len(caught[caught == True])} -- {len(lifted[lifted == True]) / len(caught[caught == True])} %')
+    print(f'moved cubes with orientation: {len(moved[moved == True])} out of {len(lifted[lifted == True])} -- {len(moved[moved == True]) / len(lifted[lifted == True])} %')
 
 
-# obs = env.reset()
-# done = False
-# #
-# while not done:
-#     action, _states = model.predict(obs)
-#     obs, rewards, done, info = env.step(action)
-#     # print(f'reward: {rewards}')
-#     print(f'info: {info}')
-#     env.render(mode='human')
+obs = env.reset()
+done = False
+#
+while not done:
+    action, _states = model.predict(obs)
+    obs, rewards, done, info = env.step(action)
+    # print(f'reward: {rewards}')
+    print(f'info: {info}')
+    env.render(mode='human')
 
-startTime = time.time()
-evaluate_performance()
-endTime = time.time()
-elapsedTime = endTime - startTime
-print(f'Elapsed time: {elapsedTime / 60.} minutes')
+# evaluation
+
+# startTime = time.time()
+# evaluate_performance()
+# endTime = time.time()
+# elapsedTime = endTime - startTime
+# print(f'Elapsed time: {elapsedTime / 60.} minutes')
 
 
